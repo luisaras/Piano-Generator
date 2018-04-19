@@ -21,12 +21,12 @@ public class Progression {
 	 */
 	
 	public final Chord[] chords;
-	
-	public Progression(Chord[] chords) {
-		this.chords = chords;
-	}
+	public final int root;
+	public final int[] scaleType;
 	
 	public Progression(String sequenceStr, int root, int[] scaleType) {
+		this.root = root;
+		this.scaleType = scaleType;
 		String[] sequence = sequenceStr.split("-");
 		chords = new Chord[sequence.length];
 		for (int i = 0; i < sequence.length; i++) {

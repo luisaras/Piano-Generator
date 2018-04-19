@@ -13,10 +13,7 @@ public class Chord {
 	public static int[] sus4 = new int[] { 0, 3, 4 };
 	
 	public final int[] pitches;
-	
-	public Chord(int[] pitches) {
-		this.pitches = pitches;
-	}
+	public final int root;
 	
 	public Chord(int scaleRoot, int[] scaleType) {
 		this(scaleRoot, 0, scaleType, fifth);
@@ -27,15 +24,13 @@ public class Chord {
 	}
 	
 	public Chord(int scaleRoot, int chordRoot, int[] scaleType, int[] chordType) {
+		root = chordRoot;
 		pitches = new int[chordType.length];
 	 	for(int i = 0; i < pitches.length; i++) {
 	 		int note = chordType[i] + chordRoot;
-	 		System.out.print("(" + note);
 	 		int oct = note >= scaleType.length ? 12 : 0;
 	 		pitches[i] = scaleType[note % scaleType.length] + scaleRoot + oct;
-	 		System.out.print("," + pitches[i] + ")");
 	 	}
-	 	System.out.println();
 	}
 	
 	public CPhrase asCPhrase(double rythm) {
@@ -79,6 +74,20 @@ public class Chord {
 			return 1;
 		else
 			return 0;
+	}
+	
+	public static String toRomanNumber(int i) {
+		switch(i) {
+			case 0: return "I";
+			case 1: return "II";
+			case 2: return "III";
+			case 3: return "IV";
+			case 4: return "V";
+			case 5: return "VI";
+			case 6: return "VII";
+			default:
+				return null;
+		}
 	}
 	
 }
