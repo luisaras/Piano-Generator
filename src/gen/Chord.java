@@ -15,21 +15,22 @@ public class Chord {
 	public final int[] pitches;
 	public final int root;
 	
-	public Chord(int scaleRoot, int[] scaleType) {
-		this(scaleRoot, 0, scaleType, fifth);
+	public Chord(Scale scale) {
+		this(0, fifth, scale);
 	}
 	
-	public Chord(int scaleRoot, String chordRoot, int[] scaleType) {
-		this(scaleRoot, toNoteNumber(chordRoot), scaleType, toChordType(chordRoot));
+	public Chord(String chordRoot, Scale scale) {
+		this(toNoteNumber(chordRoot), toChordType(chordRoot), scale);
 	}
 	
-	public Chord(int scaleRoot, int chordRoot, int[] scaleType, int[] chordType) {
+	public Chord(int chordRoot, int[] chordType, Scale scale) {
 		root = chordRoot;
+		int[] scaleType = scale.getPattern();
 		pitches = new int[chordType.length];
 	 	for(int i = 0; i < pitches.length; i++) {
 	 		int note = chordType[i] + chordRoot;
 	 		int oct = note >= scaleType.length ? 12 : 0;
-	 		pitches[i] = scaleType[note % scaleType.length] + scaleRoot + oct;
+	 		pitches[i] = scaleType[note % scaleType.length] + scale.getRoot() + oct;
 	 	}
 	}
 	

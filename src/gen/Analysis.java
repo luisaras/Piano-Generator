@@ -2,7 +2,6 @@ package gen;
 
 import java.util.ArrayList;
 
-import jm.JMC;
 import jm.music.data.*;
 
 public final class Analysis {
@@ -17,7 +16,7 @@ public final class Analysis {
 	// Progression
 	// ==================================================================================
 	
-	public static Progression deduceProgression(Part part, Scale scale, double chordLen) 
+	public static Progression deduceProgression(Part part, Scale scale, int chordLen) 
 			throws Exception {
 		// Find scale.
 		if (scale == null) {
@@ -47,8 +46,12 @@ public final class Analysis {
 				chord = roman;
 			chords += "-" + chord;
 		}
-		return new Progression(chords.substring(1), scale.root, scale.pattern, chordLen);
+		return new Progression(chords.substring(1), scale, chordLen);
 	}
+	
+	// ==================================================================================
+	// Chord
+	// ==================================================================================
 	
 	private static String deduceChord(ArrayList<NotePlay> notes, double start, Scale scale, double chordLen) {
 		// Find lowest pitch.
@@ -73,22 +76,20 @@ public final class Analysis {
 	// ==================================================================================
 	
 	public static Scale deduceScale(Part part) {
-		int[][] scales = new int[][] { JMC.MAJOR_SCALE, JMC.MINOR_SCALE, 
-				JMC.LYDIAN_SCALE, JMC.DORIAN_SCALE };
-		for(int i = 0; i < scales.length; i++) {
-			Scale s = scaleOf(scales[i], part);
+		for(int i = 0; i < Scale.patterns.length; i++) {
+			Scale s = scaleOf(i, part);
 			if (s != null)
 				return s;
 		}
 		return null;
 	}
 	
-	public static Scale scaleOf(int[] pattern, Part part) {
+	public static Scale scaleOf(int pattern, Part part) {
 		int pitch = part.getLowestPitch();
 		pitch = pitch - (pitch % 12);
 		Scale scale = new Scale(pattern, pitch);
 		for (int i = 0; i < 12; i++) {
-			scale.root = pitch + i;
+			scale.setRoot(pitch + i);
 			if (scale.includes(part)) {
 				return scale;
 			}

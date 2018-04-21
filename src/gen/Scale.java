@@ -1,16 +1,53 @@
 package gen;
 
+import jm.JMC;
 import jm.music.data.*;
 
 public class Scale {
 
-	public int[] pattern;
-	public int root;
+	public final static int[][] patterns = new int[][] { 
+		JMC.MAJOR_SCALE, 
+		JMC.MINOR_SCALE, 
+		JMC.LYDIAN_SCALE, 
+		JMC.DORIAN_SCALE };
 	
-	public Scale (int[] p, int r) {
-		pattern = p;
-		root = r;
+	private final static String[] patternNames = new String[] {
+		"Major",
+		"Minor",
+		"Lydian",
+		"Dorian" };
+	
+	private int patternID;
+	private int root;
+	
+	public Scale (int pattern, int root) {
+		this.patternID = pattern;
+		this.root = root;
 	}
+	
+	// ==================================================================================
+	// Get / Set
+	// ==================================================================================
+	
+	public int[] getPattern() {
+		return patterns[patternID];
+	}
+	
+	public void setPattern(int id) {
+		patternID = id;
+	}
+	
+	public int getRoot() {
+		return root;
+	}
+	
+	public void setRoot(int pitch) {
+		root = pitch;
+	}
+	
+	// ==================================================================================
+	// Analysis
+	// ==================================================================================
 	
 	public boolean includes(Part part) {
 		for (Phrase phrase : part.getPhraseArray())
@@ -22,10 +59,16 @@ public class Scale {
 	
 	public int indexOf(int pitch) {
 		pitch = pitch % 12;
+		int[] pattern = getPattern();
 		for (int i = 0; i < pattern.length; i++)
 			if ((root + pattern[i]) % 12 == pitch)
 				return i;
 		return -1;
+	}
+	
+	public String toString() {
+		Note n = new Note(root, 1);
+		return patternNames[patternID] + " " + n.getName();
 	}
 	
 }
