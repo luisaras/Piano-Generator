@@ -45,6 +45,11 @@ public class Scale {
 		root = pitch;
 	}
 	
+	public String toString() {
+		Note n = new Note(root, 1);
+		return patternNames[patternID] + " " + n.getName();
+	}
+	
 	// ==================================================================================
 	// Analysis
 	// ==================================================================================
@@ -64,11 +69,6 @@ public class Scale {
 			if ((root + pattern[i]) % 12 == pitch)
 				return i;
 		return -1;
-	}
-	
-	public String toString() {
-		Note n = new Note(root, 1);
-		return patternNames[patternID] + " " + n.getName();
 	}
 	
 }

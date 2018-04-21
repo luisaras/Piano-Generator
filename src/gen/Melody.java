@@ -7,13 +7,15 @@ import jm.music.data.*;
 
 public class Melody {
 	
-	// Parameters
+	// Seed
 	public int noteCountSeed = 0;
 	public int notePosSeed = 0;
 	public int notePitchSeed = 0;
 	public int notesPerCrotchet = 4;
-	public int displacement = 0; 
-	public double restFrequence = 0.25;
+	
+	// Frequence
+	public double displacementFreq = 0.2; 
+	public double restFreq = 0.2;
 	
 	public Progression progression;
 	
@@ -21,7 +23,11 @@ public class Melody {
 		this.progression = progression;
 	}
 	
-	public Phrase generate(Progression progression) {
+	// ==================================================================================
+	// Generation
+	// ==================================================================================
+	
+	public Phrase asPhrase() {
 		Random noteCount = new Random(noteCountSeed);
 		Random notePos = new Random(notePosSeed);
 		Random notePitch = new Random(notePitchSeed);
@@ -41,11 +47,14 @@ public class Melody {
 			for (int j = 0; j < pos.length - 1; j++) {
 				double duration = (pos[j + 1] - pos[j]) * 1.0 * progression.chordLen / maxNotes;
 				if (duration > 0) {
-					if (notePitch.nextDouble() <= restFrequence)
+					int[] pitches = chord.getPitches();
+					if (notePitch.nextDouble() <= restFreq)
 						phrase.addRest(new Rest(duration));
 					else {
-						int pitch = notePitch.nextInt(chord.pitches.length);
-						phrase.addNote(chord.pitches[pitch] + displacement, duration);
+						int displacement = notePitch.nextDouble() < displacementFreq ? 
+								notePitch.nextInt(2) * 2 - 1 : 0;
+						int pitch = notePitch.nextInt(pitches.length);
+						phrase.addNote(pitches[pitch] + displacement * 12, duration);
 					}
 				}
 			}
@@ -55,7 +64,7 @@ public class Melody {
 	
 	public Part asPart(String name, int inst, int channel) {
 		Part part = new Part(name, inst, channel);
-		part.add(generate(progression));
+		part.add(asPhrase());
 		return part;
 	}
 	

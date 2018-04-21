@@ -1,45 +1,113 @@
 package gen;
 
 import jm.music.data.CPhrase;
+import jm.music.data.Phrase;
 
 public class Chord {
 
 	// Chord types
-	public static int[] fifth = new int[] { 0, 2, 4 };
-	public static int[] seventh = new int[] { 0, 2, 4, 6 };
-	public static int[] ninth = new int[] { 0, 2, 4, 6, 8 };
-	public static int[] sus = new int[] { 0, 4 };
-	public static int[] sus2 = new int[] { 0, 1, 4 };
-	public static int[] sus4 = new int[] { 0, 3, 4 };
+	public static final int[] fifth = new int[] { 0, 2, 4 };
+	public static final int[] seventh = new int[] { 0, 2, 4, 6 };
+	public static final int[] ninth = new int[] { 0, 2, 4, 6, 8 };
+	public static final int[] sus = new int[] { 0, 4 };
+	public static final int[] sus2 = new int[] { 0, 1, 4 };
+	public static final int[] sus4 = new int[] { 0, 3, 4 };
 	
-	public final int[] pitches;
-	public final int root;
+	// Roman numbers
+	public static final String[] chordNames = new String[] {
+		"I", "II", "III", "IV", "V", "VI", "VII" };
 	
-	public Chord(Scale scale) {
-		this(0, fifth, scale);
-	}
+	private String name;
+	private Scale scale;
+	private int root = 0;
+	private String[] arpeggio;
 	
 	public Chord(String chordRoot, Scale scale) {
-		this(toNoteNumber(chordRoot), toChordType(chordRoot), scale);
+		this.name = chordRoot;
+		this.scale = scale;
 	}
 	
-	public Chord(int chordRoot, int[] chordType, Scale scale) {
-		root = chordRoot;
+	// ==================================================================================
+	// Get / Set
+	// ==================================================================================
+	
+	public String[] getArpeggio() {
+		return arpeggio;
+	}
+	
+	public void setArpeggio(String[] arpeggio) {
+		this.arpeggio = arpeggio;
+	}
+	
+	public int getRoot() {
+		return root;
+	}
+	
+	public void setRoot(int root) {
+		this.root = root;
+	}
+	
+	// ==================================================================================
+	// Generation
+	// ==================================================================================
+	
+	public int[] getPitches() {
+		// Scale
+		int root = this.root + scale.getRoot();
 		int[] scaleType = scale.getPattern();
-		pitches = new int[chordType.length];
+		// Chord
+		int chordRoot = toNoteNumber(name);
+		int[] chordType = toChordType(name);
+		int[] pitches = new int[chordType.length];
 	 	for(int i = 0; i < pitches.length; i++) {
 	 		int note = chordType[i] + chordRoot;
 	 		int oct = note >= scaleType.length ? 12 : 0;
-	 		pitches[i] = scaleType[note % scaleType.length] + scale.getRoot() + oct;
+	 		pitches[i] = scaleType[note % scaleType.length] + oct + root;
 	 	}
+	 	return pitches;
+	}
+	
+	private Phrase getArpeggioPhrase(int[] pitches, String arp, double len) {
+		Phrase phrase = new Phrase();
+		int count = arp.length();
+		int pitch = 0;
+		int duration = 0;
+		for(int j = 0; j < count; j++) {
+			char pos = arp.charAt(j);
+			if (pos == '_') {
+				duration += 1;
+			} else {
+				if (duration > 0)
+					phrase.addNote(pitches[pitch], duration * len / count);
+				pitch = pos - '0';
+				duration = 1;
+			}
+		}
+		if (duration > 0) {
+			phrase.addNote(pitches[pitch], duration * len / count);
+		}
+		return phrase;
 	}
 	
 	public CPhrase asCPhrase(double rythm) {
 		CPhrase cphrase = new CPhrase();
-		cphrase.addChord(pitches, rythm);
-		cphrase.setDuration(rythm);
+		int[] pitches = getPitches();
+		if (arpeggio == null) {
+			cphrase.addChord(pitches, rythm);
+			cphrase.setDuration(rythm);
+			return cphrase;
+		}
+		for(int i = 0; i < arpeggio.length; i++) {
+			Phrase phrase = getArpeggioPhrase(pitches, arpeggio[i], rythm);
+			phrase.setAppend(false);
+			cphrase.addPhrase(phrase);
+		}
 		return cphrase;
 	}
+	
+	// ==================================================================================
+	// Conversion
+	// ==================================================================================
 	
 	public static int[] toChordType(String chordRoot) {
 		String n = chordRoot.trim().toUpperCase();
@@ -78,17 +146,7 @@ public class Chord {
 	}
 	
 	public static String toRomanNumber(int i) {
-		switch(i) {
-			case 0: return "I";
-			case 1: return "II";
-			case 2: return "III";
-			case 3: return "IV";
-			case 4: return "V";
-			case 5: return "VI";
-			case 6: return "VII";
-			default:
-				return null;
-		}
+		return chordNames[i];
 	}
 	
 }

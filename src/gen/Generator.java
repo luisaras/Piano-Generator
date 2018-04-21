@@ -9,76 +9,66 @@ import jm.util.Write;
 
 public class Generator implements JMC {
 	
-	private final String fileName;
+	// ==================================================================================
+	// Generation Types
+	// ==================================================================================
 	
+	// Generate the static hard-coded song.
 	public Generator(String name) {
-		fileName = name;
-		Score score = staticSong();
-		Write.midi(score, name + ".mid");
+		Scale scale = new Scale(0, c4);
+		int chordLen = 4;
+		double tempo = 90;
+		Progression progression = new Progression("Isus2-vi-IV7-V", scale, chordLen);
+		String[] arpeggio = new String[] { "01010101", "02020202" };
+		for (int i = 0; i < progression.chords.length; i++)
+			progression.chords[i].setArpeggio(arpeggio);
+		Write.midi(randomMelody(name, progression, tempo), name + ".mid");
 	}
 	
-	public Generator(String name, int len) {
-		fileName = name;
-		Score score = randomSong(len);
-		Write.midi(score, name + ".mid");
-	}
-	
-	public Generator(String in, String out) {
-		fileName = out;
+	// Generate a semi-random song from a template.
+	public Generator(String in, String out, int chordLen) {
+		Score score = new Score(in);
+		Read.midi(score, in + ".mid");
+		double tempo = score.getTempo();
 		try {
-			Score score = templateSong(in);
-			Write.midi(score, out + ".mid");
+			Progression progression = Analysis.deduceProgression(score.getPart(0), null, chordLen);
+			Write.midi(randomMelody(out, progression, tempo), out + ".mid");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	// ==================================================================================
-	// Score
-	// ==================================================================================
-	
-	public Score templateSong(String in) throws Exception {
-		Score score = new Score(in);
-		Read.midi(score, in + ".mid");
-		int chordLen = 4;
-		double tempo = score.getTempo();
-		Progression progression = Analysis.deduceProgression(score.getPart(0), null, chordLen);
-		return randomMelody(progression, tempo);
-	}
-	
-	public Score staticSong() {
-		Scale scale = new Scale(0, c5);
-		int chordLen = 4;
-		double tempo = 90;
-		Progression progression = new Progression("Isus2-vi-IV7-V", scale, chordLen);
-		return randomMelody(progression, tempo);
-	}
-	
-	public Score randomSong(int len) {
-		Random rand = new Random(31);
-		String progressionStr = Chord.toRomanNumber(rand.nextInt(7));
+	// Generate a random song with a given length (in semibreves).
+	public Generator(String name, int len) {
+		Random rand = new Random(25);
+		// Time and rythm.
+		double tempo = rand.nextInt(4) * 15 + 60;
 		int numChords = rand.nextInt(2) == 1 ? 4 : 8;
 		int chordLen = (len * 4) / numChords;
+		// Chords.
+		String str = Chord.toRomanNumber(rand.nextInt(7));
 		for (int i = 0; i < numChords - 1; i++)
-			progressionStr += "-" + Chord.toRomanNumber(rand.nextInt(7));
-		System.out.println(progressionStr);
+			str += "-" + Chord.toRomanNumber(rand.nextInt(7));
+		// Scale.
 		int pattern = rand.nextInt(Scale.patterns.length);
 		int root = rand.nextInt(48) + 48;
-		Progression progression = new Progression(progressionStr, new Scale(pattern, root), chordLen);
-		double tempo = rand.nextInt(4) * 15 + 60;
-		return randomMelody(progression, tempo);
+		Progression prog = new Progression(str, new Scale(pattern, root), chordLen);
+		Write.midi(randomMelody(name, prog, tempo), name + ".mid");
 	}
 	
 	// ==================================================================================
 	// Melody
 	// ==================================================================================
 	
-	public Score randomMelody(Progression progression, double tempo) {
-		Score score = new Score(fileName);
-		Melody melody = new Melody(progression);
-		score.add(progression.asPart("Harmony - Piano", 0, 0));
+	// Creates a random melody for the given chord progression.
+	public Score randomMelody(String name, Progression prog, double tempo) {
+		Score score = new Score(name);
+		Melody melody = new Melody(prog);
+		System.out.println("Created song: " + prog.scale.toString() + " " + prog.toString());
+		score.add(prog.asPart("Harmony - Piano", 0, 0));
 		score.add(melody.asPart("Melody - Piano", 0, 1));
 		score.setTempo(tempo);
 		return score;
 	}
+	
 }

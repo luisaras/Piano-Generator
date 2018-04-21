@@ -2,9 +2,12 @@ import gen.Generator;
 
 public class Main {
 
-	public static void main(String[] args){	
-        //new Generator("Template2", "Chord Test");
-		new Generator("Random", 4);
+	static void testRandom() { new Generator("Random Test", 4); }
+	static void testTemplate() { new Generator("Template2", "Template Test", 4); }
+	static void testStatic() { new Generator("Static Test"); }
+	
+	public static void main(String[] args) {
+		testStatic();
     }
 
 }
