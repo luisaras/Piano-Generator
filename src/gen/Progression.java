@@ -34,6 +34,7 @@ public class Progression {
 	
 	public Part asPart(String name, int inst, int channel) {
 		Part part = new Part(name, inst, channel);
+		part.setTitle(name);
 		for (int i = 0; i < chords.length; i++)
 			part.addCPhrase(chords[i].asCPhrase(chordLen));
 		return part;

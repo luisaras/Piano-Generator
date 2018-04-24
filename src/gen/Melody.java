@@ -11,23 +11,17 @@ public class Melody {
 	public int noteCountSeed = 0;
 	public int notePosSeed = 0;
 	public int notePitchSeed = 0;
-	public int notesPerCrotchet = 4;
 	
-	// Frequence
+	// Parameters
+	public int notesPerCrotchet = 4;
 	public double displacementFreq = 0.2; 
 	public double restFreq = 0.2;
-	
-	public Progression progression;
-	
-	public Melody (Progression progression) {
-		this.progression = progression;
-	}
 	
 	// ==================================================================================
 	// Generation
 	// ==================================================================================
 	
-	public Phrase asPhrase() {
+	public Phrase asPhrase(Progression progression) {
 		Random noteCount = new Random(noteCountSeed);
 		Random notePos = new Random(notePosSeed);
 		Random notePitch = new Random(notePitchSeed);
@@ -62,9 +56,10 @@ public class Melody {
 		return phrase;
 	}
 	
-	public Part asPart(String name, int inst, int channel) {
-		Part part = new Part(name, inst, channel);
-		part.add(asPhrase());
+	public Part asPart(String name, int inst, int channel, Progression prog) {
+		Part part = new Part(name);
+		part.setTitle(name);
+		part.add(asPhrase(prog));
 		return part;
 	}
 	
