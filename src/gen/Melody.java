@@ -1,66 +1,100 @@
 package gen;
 
-import java.util.Arrays;
-import java.util.Random;
-
-import jm.music.data.*;
+import java.util.ArrayList;
 
 public class Melody {
 	
-	// Seed
-	public int noteCountSeed = 0;
-	public int notePosSeed = 0;
-	public int notePitchSeed = 0;
+	public static class Note {
+		public Scale.Position pitch = null;
+		public double time;
+		public Note(Scale.Position p, double t) { 
+			pitch = p; time = t;
+		}
+	}
 	
-	// Parameters
-	public int notesPerCrotchet = 4;
-	public double displacementFreq = 0.2; 
-	public double restFreq = 0.2;
+	public ArrayList<Note> notes;
+	public double duration;
 	
 	// ==================================================================================
-	// Generation
+	// Initialization
 	// ==================================================================================
 	
-	public Phrase asPhrase(Progression progression) {
-		Random noteCount = new Random(noteCountSeed);
-		Random notePos = new Random(notePosSeed);
-		Random notePitch = new Random(notePitchSeed);
-		
-		Phrase phrase = new Phrase();
-		int maxNotes = notesPerCrotchet * progression.chordLen;
-		for(int i = 0; i < progression.chords.length; i++) {
-			// Note distribution
-			int[] pos = new int[noteCount.nextInt(maxNotes) + 2];
-			for(int j = 1; j < pos.length - 1; j++)
-				pos[j] = notePos.nextInt(maxNotes);
-			pos[0] = 0;
-			pos[pos.length - 1] = maxNotes;
-			Arrays.sort(pos);
-			// Note pitches
-			Chord chord = progression.chords[i];
-			for (int j = 0; j < pos.length - 1; j++) {
-				double duration = (pos[j + 1] - pos[j]) * 1.0 * progression.chordLen / maxNotes;
-				if (duration > 0) {
-					int[] pitches = chord.getPitches();
-					if (notePitch.nextDouble() <= restFreq)
-						phrase.addRest(new Rest(duration));
-					else {
-						int displacement = notePitch.nextDouble() < displacementFreq ? 
-								notePitch.nextInt(2) * 2 - 1 : 0;
-						int pitch = notePitch.nextInt(pitches.length);
-						phrase.addNote(pitches[pitch] + displacement * 12, duration);
-					}
+	public Melody(ArrayList<Note> notes, double duration) {
+		this.notes = notes;
+		this.duration = duration;
+	}
+	
+	public String toString() {
+		String s = "";
+		for (Note n : notes) {
+			if (n.pitch != null)
+				s += n.pitch.function + " ";
+		}
+		return s;
+	}
+	
+	// ==================================================================================
+	// Duration
+	// ==================================================================================
+	
+	public void setDuration(int duration) {
+		if (duration > this.duration) {
+			notes.add(new Note(null, this.duration));
+			this.duration = duration;
+		} else if (duration < this.duration) {
+			for (int i = notes.size() - 1; i >= 0; i--) {
+				if (notes.get(i).time >= duration) {
+					notes.remove(i);
+				} else {
+					break;
 				}
 			}
 		}
-		return phrase;
 	}
 	
-	public Part asPart(String name, int inst, int channel, Progression prog) {
-		Part part = new Part(name);
-		part.setTitle(name);
-		part.add(asPhrase(prog));
-		return part;
+	public void displace(int time) {
+		if (time > 0) {
+			for (Note note : notes) {
+				note.time += time;
+			}
+			duration += time;
+		}
 	}
 	
+	// ==================================================================================
+	// Cross-over
+	// ==================================================================================
+	
+	public Melody subMelody(double start, double end) {
+		ArrayList<Note> subMelody = new ArrayList<>();
+		for(Note note : notes) {
+			if (note.time >= start) {
+				if (note.time >= end) {
+					break;
+				}
+				subMelody.add(new Note(note.pitch, note.time - start));
+			}
+		}		
+		return new Melody(subMelody, end - start);
+	}
+	
+	public Melody concatenate(Melody other) {
+		ArrayList<Note> notes = new ArrayList<>();
+		for (Note note : this.notes) {
+			notes.add(new Note(note.pitch, note.time));
+		}
+		if (other.notes.size() == 0) {
+			notes.add(new Note(null, duration));
+		} else {
+			Note first = notes.get(0);
+			if (first.time > 0) {
+				notes.add(new Note(null, duration));
+			}
+			for (Note note : other.notes) {
+				notes.add(new Note(note.pitch, note.time + duration));
+			}
+		}
+		return new Melody(notes, duration + other.duration);
+	}
+
 }
