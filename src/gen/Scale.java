@@ -6,10 +6,17 @@ import java.util.ArrayList;
 
 public class Scale {
 
-	private final static int[] C_MAJOR_VALUES = new int[] { 0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6 };
 	private final static int[] C_MAJOR_STEPS = new int[] { 2, 2, 1, 2, 2, 2, 1 };
-	private final static int[] MAJOR_ACCIDENTALS = new int[] { 0, 7, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5 };
-	private final static int[] MINOR_ACCIDENTALS = new int[] { -3, 4, -1, 6, 1, -4, 3, -2, 5, 0, 7, 2 };
+	private final static int[] MAJOR_SIGNATURES = new int[] { 0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5 };
+	private final static String[] MODE_NAMES = new String[] {
+		"Ionian (major)",
+		"Dorian",
+		"Phrygian",
+		"Lydian",
+		"Mixolydian",
+		"Aeolian (minor)",
+		"Locrian"
+	};
 	
 	public static class Position {
 		public int function = 0;
@@ -23,7 +30,7 @@ public class Scale {
 	
 	public final int mode;
 	public final int root;
-	public final int rootValue;
+	public final int signature;
 	public final String name;
 	
 	public final boolean[] contains = new boolean[12];
@@ -35,30 +42,17 @@ public class Scale {
 	// Initialization
 	// ==================================================================================
 	
-	public Scale(int root, int mode) {
-		int[] accidentals = mode == 0 ? MAJOR_ACCIDENTALS : MINOR_ACCIDENTALS;
-		for (int i = 0; i < 12; i++) {
-			if (accidentals[i] == root) {
-				root = i;
-				break;
-			}
+	public Scale(int root, int mode, int sig) {
+		this.root = root;
+		this.mode = mode;
+		this.signature = sig;
+		
+		String rootName = new jm.music.data.Note(root, 1).getName();
+		if (mode == 5) {
+			rootName = rootName.toLowerCase();
 		}
-		this.mode = mode;
-		this.root = root;
-		this.rootValue = C_MAJOR_VALUES[root % 12];
-		this.name = getName();
-		initializeArrays();
-	}
-	
-	public Scale (int root, int rootValue, int mode) {
-		this.mode = mode;
-		this.root = root;
-		this.rootValue = rootValue;
-		this.name = getName();
-		initializeArrays();
-	}
-	
-	private void initializeArrays() {		
+		this.name = rootName + " " + MODE_NAMES[mode];
+		
 		for (int i = 0; i < 12; i++)
 			this.contains[i] = false;
 		
@@ -81,14 +75,28 @@ public class Scale {
 			step += C_MAJOR_STEPS[(mode + i) % 7];
 		}
 	}
-	
-	private String getName() {
-		String rootName = new jm.music.data.Note(root, 1).getName();
-		if (mode == 0) {
-			return rootName + " Major";
-		} else {
-			return rootName.toLowerCase() + " minor";
+
+	public static int getRoot(int sig, int mode) {
+		if (sig >= 7) sig = 12 - sig;
+		if (sig <= -6) sig = 12 + sig;
+		for (int i = 0; i < 12; i++) {
+			int isig = getSignature(i, mode);
+			if (isig == sig) {
+				return i;
+			}
 		}
+		return -1;
+	}
+	
+	public static int getSignature(int root, int mode) {
+		int sig = MAJOR_SIGNATURES[root % 12];
+		if (mode <= 2)
+			sig -= mode * 2;
+		else
+			sig += 1 - (mode - 3) * 2;
+		while (sig >= 7) sig = 12 - sig;
+		while (sig <= -6) sig = 12 + sig;
+		return sig;
 	}
 	
 	// ==================================================================================
@@ -98,11 +106,7 @@ public class Scale {
 	public String toString() {
 		return name;
 	}
-	
-	public int getSignature() {
-		return (mode == 0 ? MAJOR_ACCIDENTALS : MINOR_ACCIDENTALS)[root % 12];
-	}
-	
+
 	public int getPitch(int pos) {
 		return root + steps[pos % 7] + 12 * (pos / 7);
 	}
@@ -118,24 +122,21 @@ public class Scale {
 			if (ipitch == pitch) {
 				return new Position(i, 0, octaves);
 			} else if (ipitch > pitch) {
+				System.out.println("ACCIDENTAL " + (pitch + octaves * 12) + " " + this.toString());
 				return new Position(i - 1, 1, octaves);
 			}
 		}
 		return null;
 	}
 	
-	public ArrayList<Note> convert(ArrayList<Note> original, Scale newScale) {
-		ArrayList<Note> notes = new ArrayList<Note>();
-		for (int n = 0; n < original.size(); n++) {
-			Note note = original.get(n);
-			if (note.pitch == null) {
-				notes.add(note);
-			} else {
-				int pitch = note.pitch.getMIDIPitch(this);
-				notes.add(new Note(newScale.getPosition(pitch), note.time));
+	public void convert(ArrayList<Note> notes, Scale newScale) {
+		for (int n = 0; n < notes.size(); n++) {
+			Note note = notes.get(n);
+			if (note.pitch != null) {
+				//int pitch = note.pitch.getMIDIPitch(this);
+				//note.pitch = newScale.getPosition(pitch);
 			}
 		}
-		return notes;
 	}
 
 }

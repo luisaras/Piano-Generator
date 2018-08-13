@@ -49,6 +49,7 @@ public class Melody {
 					break;
 				}
 			}
+			this.duration = duration;
 		}
 	}
 	
@@ -57,24 +58,34 @@ public class Melody {
 			for (Note note : notes) {
 				note.time += time;
 			}
+			notes.add(0, new Note(null, 0));
 			duration += time;
 		}
+	}
+	
+	public int noteCount() {
+		int c = 0;
+		for (Note note : notes) {
+			if (note.pitch != null)
+				c++;
+		}
+		return c;
 	}
 	
 	// ==================================================================================
 	// Cross-over
 	// ==================================================================================
 	
-	public Melody subMelody(double start, double end) {
+	public Melody cut(double start, double end) {
 		ArrayList<Note> subMelody = new ArrayList<>();
 		for(Note note : notes) {
-			if (note.time >= start) {
+			if (note.time >= start - 0.1) {
 				if (note.time >= end) {
 					break;
 				}
 				subMelody.add(new Note(note.pitch, note.time - start));
 			}
-		}		
+		}
 		return new Melody(subMelody, end - start);
 	}
 	
@@ -83,16 +94,9 @@ public class Melody {
 		for (Note note : this.notes) {
 			notes.add(new Note(note.pitch, note.time));
 		}
-		if (other.notes.size() == 0) {
-			notes.add(new Note(null, duration));
-		} else {
-			Note first = notes.get(0);
-			if (first.time > 0) {
-				notes.add(new Note(null, duration));
-			}
-			for (Note note : other.notes) {
-				notes.add(new Note(note.pitch, note.time + duration));
-			}
+		notes.add(new Note(null, duration));
+		for (Note note : other.notes) {
+			notes.add(new Note(note.pitch, note.time + duration));
 		}
 		return new Melody(notes, duration + other.duration);
 	}

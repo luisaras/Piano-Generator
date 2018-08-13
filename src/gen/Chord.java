@@ -17,10 +17,12 @@ public class Chord {
 		Scale.Position rootPos = null;
 		for (Melody line : lines) {
 			for (Note note : line.notes) {
-				if (note.pitch == null)
+				if (note.pitch == null) {
+					System.out.print("0(" + note.time + ") ");
 					continue;
+				}
 				int pitch = note.pitch.getMIDIPitch(scale);
-				System.out.print(note.pitch.function + " ");
+				System.out.print((note.pitch.function + 1) + "(" + note.time + ") ");
 				if (pitch < rootPitch) {
 					rootPitch = pitch;
 					rootPos = note.pitch;
@@ -28,22 +30,22 @@ public class Chord {
 			}
 			System.out.println();
 		}
-		System.out.println(rootPos.function);
-		root = new Scale(rootPitch, scale.mode + rootPos.function);
+		int mode = (scale.mode + rootPos.function) % 7;
+		int sig = Scale.getSignature(rootPitch, mode);
+		root = new Scale(rootPitch, mode, sig);
+		System.out.println(root.toString() + " " + (rootPitch %12) + " " + root.mode);
 		arpeggio = new ArrayList<Melody>();
-		for (int i = 0; i < lines.size(); i++) {
-			ArrayList<Note> newLine = scale.convert(lines.get(i).notes, root);
-			arpeggio.add(new Melody(newLine, lines.get(i).duration));
+		for (Melody line : lines) {
+			scale.convert(line.notes, root);
+			arpeggio.add(line);
 		}
-		root = scale;
-		arpeggio = lines;
 	}
 	
 	public ArrayList<Melody> asMelodyLines(Scale scale) {
 		ArrayList<Melody> melodies = new ArrayList<>();
-		for (int i = 0 ; i < arpeggio.size(); i++) {
-			ArrayList<Note> newLine = root.convert(arpeggio.get(i).notes, scale);
-			melodies.add(new Melody(newLine, arpeggio.get(i).duration));
+		for (Melody line : arpeggio) {
+			root.convert(line.notes, scale);
+			melodies.add(line);
 		}
 		return melodies;
 	}
