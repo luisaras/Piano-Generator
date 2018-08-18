@@ -24,7 +24,11 @@ public class Scale {
 		public int octaves = 0;
 		public Position(int f, int a, int o) { function = f; accidental = a; octaves = o; }
 		public int getMIDIPitch(Scale scale) {
-			return octaves * 12 + scale.steps[function] + accidental;
+			return octaves * 12 + scale.steps[function] + accidental + scale.root % 12;
+		}
+		public String toString() {
+			String acc = accidental < 0 ? "b" : accidental > 0 ? "#" : "";
+			return octaves + "oct " + function + acc;
 		}
 	}
 	
@@ -115,8 +119,10 @@ public class Scale {
 		int root = this.root % 12;
 		int octaves = pitch / 12;
 		pitch = pitch % 12;
-		if (pitch < root)
+		if (pitch < root) {
 			pitch += 12;
+			octaves --;
+		}
 		for (int i = 0; i < 7; i++) {
 			int ipitch = (steps[i] + root);
 			if (ipitch == pitch) {
@@ -126,7 +132,7 @@ public class Scale {
 				return new Position(i - 1, 1, octaves);
 			}
 		}
-		return null;
+		return new Position(0, pitch, octaves);
 	}
 	
 	public void convert(ArrayList<Note> notes, Scale newScale) {
