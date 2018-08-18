@@ -19,17 +19,26 @@ public class Scale {
 	};
 	
 	public static class Position {
+		
 		public int function = 0;
 		public int accidental = 0; // Out of scale
 		public int octaves = 0;
+		
 		public Position(int f, int a, int o) { function = f; accidental = a; octaves = o; }
+		
 		public int getMIDIPitch(Scale scale) {
-			return octaves * 12 + scale.steps[function] + accidental + scale.root % 12;
+			return octaves * 12 + scale.steps[function] + accidental + scale.root;
 		}
+		
 		public String toString() {
 			String acc = accidental < 0 ? "b" : accidental > 0 ? "#" : "";
 			return octaves + "oct " + function + acc;
 		}
+		
+		public Position clone() {
+			return new Position(function, accidental, octaves);
+		}
+		
 	}
 	
 	public final int mode;
@@ -55,7 +64,7 @@ public class Scale {
 		if (mode == 5) {
 			rootName = rootName.toLowerCase();
 		}
-		this.name = rootName + " " + MODE_NAMES[mode];
+		this.name = rootName + (root % 12) + " " + MODE_NAMES[mode];
 		
 		for (int i = 0; i < 12; i++)
 			this.contains[i] = false;
@@ -117,7 +126,7 @@ public class Scale {
 	
 	public Position getPosition(int pitch) {
 		int root = this.root % 12;
-		int octaves = pitch / 12;
+		int octaves = pitch / 12 - this.root / 12;
 		pitch = pitch % 12;
 		if (pitch < root) {
 			pitch += 12;
@@ -128,7 +137,6 @@ public class Scale {
 			if (ipitch == pitch) {
 				return new Position(i, 0, octaves);
 			} else if (ipitch > pitch) {
-				System.out.println("ACCIDENTAL " + (pitch + octaves * 12) + " " + this.toString());
 				return new Position(i - 1, 1, octaves);
 			}
 		}
@@ -139,8 +147,8 @@ public class Scale {
 		for (int n = 0; n < notes.size(); n++) {
 			Note note = notes.get(n);
 			if (note.pitch != null) {
-				//int pitch = note.pitch.getMIDIPitch(this);
-				//note.pitch = newScale.getPosition(pitch);
+				int pitch = note.pitch.getMIDIPitch(this);
+				note.pitch = newScale.getPosition(pitch);
 			}
 		}
 	}

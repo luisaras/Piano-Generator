@@ -2,8 +2,8 @@ package midi;
 
 import java.util.ArrayList;
 
-import gen.Chord;
 import gen.Composition;
+import gen.Harmony;
 import gen.Melody;
 import gen.Scale;
 import gen.Melody.Note;
@@ -32,6 +32,7 @@ public class Reader {
 		int root = Scale.getRoot(sig, mode);
 		
 		composition.scale = new Scale(root, mode, sig);
+		System.out.println(composition.scale.toString());
 
 		{ // Melody notes
 			Phrase phrase = score.getPart(0).getPhrase(0);
@@ -65,7 +66,7 @@ public class Reader {
 				notes.add(new Note(pos, time));
 			}
 		}
-		double songDuration = 4 * composition.numerator;
+		double songDuration = composition.duration * composition.numerator;
 		if (phrase.getEndTime() < songDuration)
 			notes.add(new Note(null, phrase.getEndTime()));
 		return new Melody(notes, songDuration);
@@ -75,20 +76,20 @@ public class Reader {
 	// Harmony Conversion
 	// ==================================================================================
 	
-	private static ArrayList<Chord> toHarmony(Part part, Composition composition) {
-		ArrayList<Chord> harmony = new ArrayList<>();
+	private static Harmony toHarmony(Part part, Composition composition) {
+		Harmony harmony = new Harmony();
 		ArrayList<Melody> lines = new ArrayList<>();
 		for (Phrase phrase : part.getPhraseArray()) {
 			lines.add(toMelody(phrase, composition));
 		}
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < composition.duration; i++) {
 			ArrayList<Melody> chordLines = new ArrayList<>();
 			int start = i * composition.numerator;
 			int end = (i + 1) * composition.numerator;
 			for (Melody line : lines) {
 				chordLines.add(line.cut(start, end));
 			}
-			harmony.add(new Chord(chordLines, composition.scale));
+			harmony.addChord(chordLines, composition.scale);
 		}
 		return harmony;
 	}

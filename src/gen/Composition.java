@@ -1,15 +1,15 @@
 package gen;
 
-import java.util.ArrayList;
-
 public class Composition {
+	
+	public int duration = 4;
 	
 	public Scale scale;
 	public int numerator;
 	public int denominator;
 	public double bpm;
 	
-	public ArrayList<Chord> harmony;
+	public Harmony harmony;
 	public Melody melody;
 	
 }

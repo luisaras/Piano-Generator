@@ -1,6 +1,6 @@
 package midi;
 
-import gen.Chord;
+import gen.Harmony;
 import gen.Composition;
 import gen.Melody;
 import gen.Scale;
@@ -63,17 +63,13 @@ public class Writer {
 	// Harmony Conversion
 	// ==================================================================================
 	
-	private static Phrase[] toPhraseList(ArrayList<Chord> harmony, Composition composition) {
+	private static Phrase[] toPhraseList(Harmony harmony, Composition composition) {
 		ArrayList<Phrase> phrases = new ArrayList<>();
-		for (int c = 0; c < harmony.size(); c++) {
-			Chord chord = harmony.get(c);
-			ArrayList<Melody> arpeggio = chord.asMelodyLines(composition.scale);
-			for (Melody melody : arpeggio) {
-				melody.displace(c * composition.numerator);
-				Phrase phrase = toPhrase(melody, composition.scale);
-				phrase.setAppend(false);
-				phrases.add(phrase);
-			}
+		ArrayList<Melody> lines = harmony.asMelodyLines(composition.scale, composition.numerator);
+		for (Melody melody : lines) {
+			Phrase phrase = toPhrase(melody, composition.scale);
+			phrase.setAppend(false);
+			phrases.add(phrase);
 		}
 		Phrase[] phraseArr = new Phrase[phrases.size()];
 		return phrases.toArray(phraseArr);

@@ -5,11 +5,18 @@ import java.util.ArrayList;
 public class Melody {
 	
 	public static class Note {
+		
 		public Scale.Position pitch = null;
 		public double time;
+		
 		public Note(Scale.Position p, double t) { 
 			pitch = p; time = t;
 		}
+		
+		public Note clone() {
+			return new Note(pitch == null ? null : pitch.clone(), time);
+		}
+		
 	}
 	
 	public ArrayList<Note> notes;
@@ -31,6 +38,14 @@ public class Melody {
 				s += n.pitch.function + " ";
 		}
 		return s;
+	}
+	
+	public Melody clone() {
+		ArrayList<Note> notes = new ArrayList<>();
+		for (Note n : this.notes) {
+			notes.add(n.clone());
+		}
+		return new Melody(notes, this.duration);
 	}
 	
 	// ==================================================================================
