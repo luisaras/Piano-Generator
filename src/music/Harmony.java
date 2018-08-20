@@ -1,6 +1,4 @@
-package gen;
-
-import gen.Melody.Note;
+package music;
 
 import java.util.ArrayList;
 
@@ -11,21 +9,18 @@ public class Harmony {
 	
 	public void addChord(ArrayList<Melody> lines, Scale scale) {
 		int rootPitch = 999; // Lowest pitch
-		Scale.Position rootPos = null;
+		Note rootPos = null;
 		for (Melody line : lines) {
-			for (Note note : line.notes) {
-				if (note.pitch == null) {
-					//System.out.print("0(" + note.time + ") ");
+			for (NotePlay note : line.notes) {
+				if (note.note == null) {
 					continue;
 				}
-				int pitch = note.pitch.getMIDIPitch(scale);
-				//System.out.print((note.pitch.function + 1) + "(" + note.time + ") ");
+				int pitch = note.note.getMIDIPitch(scale);
 				if (pitch < rootPitch) {
 					rootPitch = pitch;
-					rootPos = note.pitch;
+					rootPos = note.note;
 				}
 			}
-			//System.out.println();
 		}
 		int mode = (scale.mode + rootPos.function) % 7;
 		int sig = Scale.getSignature(rootPitch, mode);

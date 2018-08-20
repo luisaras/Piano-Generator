@@ -2,11 +2,7 @@ package midi;
 
 import java.util.ArrayList;
 
-import gen.Composition;
-import gen.Harmony;
-import gen.Melody;
-import gen.Scale;
-import gen.Melody.Note;
+import music.*;
 import jm.music.data.Part;
 import jm.music.data.Phrase;
 import jm.music.data.Score;
@@ -52,23 +48,23 @@ public class Reader {
 	// ==================================================================================
 	
 	private static Melody toMelody(Phrase phrase, Composition composition) {
-		ArrayList<Note> notes = new ArrayList<>();
+		ArrayList<NotePlay> notes = new ArrayList<>();
 		double start = phrase.getStartTime();
 		if (start > 0)
-			notes.add(new Note(null, 0));
+			notes.add(new NotePlay(null, 0));
 		for (int i = 0; i < phrase.size(); i++) {
 			jm.music.data.Note note = phrase.getNote(i);
 			double time = phrase.getNoteStartTime(i);
 			if (note.isRest()) {
-				notes.add(new Note(null, time));
+				notes.add(new NotePlay(null, time));
 			} else {
-				Scale.Position pos = composition.scale.getPosition(note.getPitch());
-				notes.add(new Note(pos, time));
+				Note pos = composition.scale.getPosition(note.getPitch());
+				notes.add(new NotePlay(pos, time));
 			}
 		}
 		double songDuration = composition.duration * composition.numerator;
 		if (phrase.getEndTime() < songDuration)
-			notes.add(new Note(null, phrase.getEndTime()));
+			notes.add(new NotePlay(null, phrase.getEndTime()));
 		return new Melody(notes, songDuration);
 	}
 	

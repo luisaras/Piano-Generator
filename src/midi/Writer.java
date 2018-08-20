@@ -1,13 +1,8 @@
 package midi;
 
-import gen.Harmony;
-import gen.Composition;
-import gen.Melody;
-import gen.Scale;
-import gen.Melody.Note;
-
 import java.util.ArrayList;
 
+import music.*;
 import jm.music.data.Part;
 import jm.music.data.Phrase;
 import jm.music.data.Rest;
@@ -43,16 +38,16 @@ public class Writer {
 	// ==================================================================================
 	
 	private static Phrase toPhrase(Melody melody, Scale scale) {
-		ArrayList<Note> notes = melody.notes;
+		ArrayList<NotePlay> notes = melody.notes;
 		double duration = melody.duration;
 		Phrase phrase = new Phrase(0);
 		for (int i = 0; i < notes.size(); i++) {
 			double end = i < notes.size() - 1 ? notes.get(i + 1).time : duration;
-			Note note = notes.get(i);
-			if (note.pitch == null) {
+			NotePlay note = notes.get(i);
+			if (note.note == null) {
 				phrase.addRest(new Rest(end - note.time));
 			} else {
-				phrase.addNote(note.pitch.getMIDIPitch(scale), end - note.time);
+				phrase.addNote(note.note.getMIDIPitch(scale), end - note.time);
 				phrase.getNote(i).setDuration(end - note.time - 0.0001);
 			}
 		}

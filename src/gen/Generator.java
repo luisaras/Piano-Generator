@@ -1,19 +1,29 @@
 package gen;
 
+import music.Composition;
+
 public class Generator {
 	
-	public static final String inputFile = "Template.mid";
-	public static final String outputFile = "Result.mid";
+	private final Individual template;
 	
-	// Generate the static hard-coded song.
-	public Generator() {
-		Composition inputPiece = midi.Reader.read(inputFile);
-		if (inputPiece == null)
-			System.out.println("Could not read file: " + inputFile);
-		else {	
-			Composition outputPiece = inputPiece; // TODO
-			midi.Writer.write(outputFile, outputPiece);
+	public Generator(Composition template) {
+		this.template = new Individual(template);
+		getFitness(this.template);
+	}
+	
+	public Composition generate() {
+		// TODO
+		return template.piece;
+	}
+	
+	private double getFitness(Individual ind) {
+		double f = 0;
+		for(int i = 0; i < ind.features.length; i++) {
+			double d = (ind.features[i] - template.features[i]) / template.features[i];
+			//System.out.println(template.features[i]);
+			f += d * d * Features.weights[i];
 		}
+		return Math.sqrt(f);
 	}
 
 }

@@ -1,9 +1,20 @@
+import music.Composition;
 import gen.Generator;
 
 public class Main {
 	
+	public static final String inputFile = "Template.mid";
+	public static final String outputFile = "Result.mid";
+	
 	public static void main(String[] args) {
-		new Generator();
+		Composition inputPiece = midi.Reader.read(inputFile);
+		if (inputPiece == null)
+			System.out.println("Could not read file: " + inputFile);
+		else {	
+			Generator gen = new Generator(inputPiece);
+			Composition outputPiece = gen.generate();
+			midi.Writer.write(outputFile, outputPiece);
+		}
     }
 
 }
