@@ -49,5 +49,18 @@ public class Harmony {
 		return melodies;
 	}
 	
+	public Harmony clone() {
+		Harmony harmony = new Harmony();
+		harmony.arpeggio = new ArrayList<>();
+		
+		for (Scale chord : chords) {
+			harmony.chords.add(chord.clone());
+		}
+		for (Melody line : arpeggio) {
+			harmony.arpeggio.add(line.clone());
+		}
+		
+		return harmony;
+	}
 	
 }

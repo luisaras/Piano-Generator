@@ -13,7 +13,7 @@ public class Reader {
 	public static Composition read(String fileName) {
 		Score score = new Score();
 		try {
-			Read.midi(score, fileName);
+			Read.midi(score, fileName + ".mid");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

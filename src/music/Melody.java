@@ -100,5 +100,50 @@ public class Melody {
 		}
 		return new Melody(notes, duration + other.duration);
 	}
+	
+	// ==================================================================================
+	// Statistics
+	// ==================================================================================
 
+	public static class Stats {
+		
+		public double averageFunction = 0;
+		public double averageOctave = 0;
+		public double averageAccidental = 0;
+		
+		public double functionVariation = 0;
+		public double octaveVariation = 0;
+		public double accidentalVariation = 0;
+		
+	}
+	
+	public Stats getStats() {
+		Stats s = new Stats();
+		
+		int noteCount = noteCount();
+		for (NotePlay np : notes) {
+			if (np.note != null) {
+				s.averageFunction += np.note.function;
+				s.averageOctave += np.note.octaves;
+				s.averageAccidental += np.note.accidental;
+			}
+		}
+		s.averageFunction /= noteCount;
+		s.averageOctave /= noteCount;
+		s.averageAccidental /= noteCount;
+		
+		for (NotePlay np : notes) {
+			if (np.note != null) {
+				double f = np.note.function - s.averageFunction;
+				double o = np.note.octaves - s.averageOctave;
+				double a = np.note.accidental - s.averageAccidental;
+				s.functionVariation += f * f;
+				s.octaveVariation += o * o;
+				s.accidentalVariation += a * a;
+			}
+		}
+		
+		return s;
+	}
+	
 }

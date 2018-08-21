@@ -30,7 +30,7 @@ public class Writer {
 			score.addPart(part);
 		}
 		
-		Write.midi(score, fileName);
+		Write.midi(score, fileName + ".mid");
 	}
 	
 	// ==================================================================================

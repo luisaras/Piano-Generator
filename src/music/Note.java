@@ -6,7 +6,11 @@ public class Note {
 	public int accidental = 0; // Out of scale
 	public int octaves = 0;
 	
-	public Note(int f, int a, int o) { function = f; accidental = a; octaves = o; }
+	public Note(int func, int acc, int oct) { 
+		function = func; 
+		accidental = acc; 
+		octaves = oct; 
+	}
 	
 	public int getMIDIPitch(Scale scale) {
 		return octaves * 12 + scale.steps[function] + accidental + scale.root;

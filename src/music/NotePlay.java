@@ -5,8 +5,9 @@ public class NotePlay {
 	public Note note = null;
 	public double time;
 	
-	public NotePlay(Note p, double t) { 
-		note = p; time = t;
+	public NotePlay(Note note, double time) { 
+		this.note = note; 
+		this.time = time;
 	}
 	
 	public NotePlay clone() {
