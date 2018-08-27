@@ -83,6 +83,13 @@ public class Scale {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	public Scale clone() {
+		return new Scale(root, mode, signature);
+	}
+	
 	// ==================================================================================
 	// Find Scales
 	// ==================================================================================
@@ -173,13 +180,6 @@ public class Scale {
 		}
 	}
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
-	public Scale clone() {
-		return new Scale(root, mode, signature);
-	}
-	
 	// ==================================================================================
 	// Scale Info
 	// ==================================================================================
@@ -215,5 +215,5 @@ public class Scale {
 		}
 		return rootName + (root / 12) + " " + MODE_NAMES[mode];
 	}
-
+	
 }

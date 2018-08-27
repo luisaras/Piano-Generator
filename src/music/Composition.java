@@ -12,10 +12,35 @@ public class Composition {
 	public Harmony harmony;
 	public Melody melody;
 	
+	// ==================================================================================
+	// Cross-over
+	// ==================================================================================
+	
+	public Composition cut(int start, int end) {
+		Composition composition = new Composition();
+		composition.duration = duration;
+		composition.numerator = numerator;
+		composition.denominator = denominator;
+		composition.bps = bps;
+		composition.scale = scale;
+		composition.melody = melody.cut(start * numerator, end * numerator);
+		composition.harmony = harmony.cut(start, end);
+		return composition;
+	}
+	
+	public Composition concatenate(Composition second) {
+		melody.concatenate(second.melody);
+		harmony.concatenate(second.harmony);
+		return this;
+	}
+	
+	// ==================================================================================
+	// Statistics
+	// ==================================================================================
+	
 	public static class Stats {
 		
 		public double seconds = 0;
-		
 		public double notesPerSecond = 0;
 		
 		public Melody.Stats melody;

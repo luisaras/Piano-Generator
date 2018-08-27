@@ -28,6 +28,7 @@ public class Reader {
 		int root = Scale.getRoot(sig, mode);
 		
 		composition.scale = new Scale(root, mode, sig);
+		composition.duration = (int) score.getEndTime() / composition.numerator;
 		System.out.println(composition.scale.toString());
 
 		{ // Melody notes
@@ -77,7 +78,7 @@ public class Reader {
 			for (Melody line : lines) {
 				chordLines.add(line.cut(start, end));
 			}
-			harmony.addChord(chordLines, composition.scale);
+			harmony.add(new Chord(chordLines, composition.scale));
 		}
 		return harmony;
 	}

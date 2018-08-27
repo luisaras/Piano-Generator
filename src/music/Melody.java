@@ -158,11 +158,6 @@ public class Melody extends ArrayList<NotePlay> {
 			if (np.time >= end)
 				break;
 			if (np.time >= start) {
-				if (lastAttack >= 0) {
-					double a = np.time - lastAttack - s.accidentalMean;
-					s.attackVariation += a * a;
-					lastAttack = np.time;
-				}
 				double p = np.note.getPitch(scale) - s.pitchMean;
 				double n = np.note.getPitch(scale) % 12 - s.noteMean;
 				double f = np.note.function - s.functionMean;
@@ -175,6 +170,11 @@ public class Melody extends ArrayList<NotePlay> {
 				s.octaveVariation += o * o;
 				s.accidentalVariation += a * a;
 				s.durationVariation += d * d;
+				if (lastAttack >= 0) {
+					double at = np.time - lastAttack - s.accidentalMean;
+					s.attackVariation += at * at;
+					lastAttack = np.time;
+				}
 			}
 		}
 		s.pitchVariation /= size();

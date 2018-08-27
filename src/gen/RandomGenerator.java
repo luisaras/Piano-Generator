@@ -12,7 +12,7 @@ import music.Scale;
 
 public class RandomGenerator {
 
-	Random rand = new Random(0);
+	private Random rand = new Random(0);
 	
 	public double getDouble(double mean, double var) {
 		// TODO
@@ -27,6 +27,7 @@ public class RandomGenerator {
 		composition.denominator = template.denominator;
 		composition.bps = template.bps + (rand.nextDouble() - 0.5) * template.bps / 2;
 		composition.scale = template.scale;
+		
 		composition.melody = randomMelody(template.melody, template.scale);
 		composition.harmony = randomHarmony(template.harmony, template.scale);
 		
