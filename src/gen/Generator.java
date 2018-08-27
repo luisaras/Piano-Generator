@@ -34,10 +34,10 @@ public class Generator extends RandomGenerator {
 	private double getDistance(Individual ind) {
 		double f = 0;
 		for(int i = 0; i < ind.features.length; i++) {
-			double d = (ind.features[i] - template.features[i]) / template.features[i];
+			double d = ind.features[i] - template.features[i];
 			f += d * d * Features.weights[i];
 		}
-		return Math.sqrt(f);
+		return f;
 	}
 
 }

@@ -7,16 +7,30 @@ public class Composition {
 	public int duration = 4; // measures
 	public int numerator; // beats
 	public int denominator; // beats / measure
-	public double bpm; // beats / minute
+	public double bps; // beats / second
 	
 	public Harmony harmony;
 	public Melody melody;
 	
-	/** The duration of the piece in seconds.
-	 * @return The duration in seconds.
-	 */
-	public double getDuration() {
-		return duration * denominator / bpm * 60; 
+	public static class Stats {
+		
+		public double seconds = 0;
+		
+		public double notesPerSecond = 0;
+		
+		public Melody.Stats melody;
+		public Harmony.Stats harmony;
+		
+	}
+	
+	public Stats getStats() {
+		Stats s = new Stats();
+		
+		s.seconds = duration * denominator / bps;
+		s.melody = melody.getStats(scale);
+		s.harmony = harmony.getStats(scale);
+		
+		return s;
 	}
 	
 }

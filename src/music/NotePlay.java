@@ -4,19 +4,20 @@ public class NotePlay {
 	
 	public Note note = null;
 	public double time;
+	public double duration;
 	
-	public NotePlay(Note note, double time) { 
+	public NotePlay(Note note, double time, double duration) { 
 		this.note = note; 
 		this.time = time;
+		this.duration = duration;
 	}
 	
 	public NotePlay clone() {
-		return new NotePlay(note == null ? null : note.clone(), time);
+		return new NotePlay(note.clone(), time, duration);
 	}
 	
 	public String toString() {
-		String n = note == null ? "0" : note.toString();
-		return n + "(" + time + ")";
+		return note.toString() + "(" + time + ")";
 	}
 	
 }

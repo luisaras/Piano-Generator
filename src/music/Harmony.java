@@ -2,16 +2,17 @@ package music;
 
 import java.util.ArrayList;
 
-public class Harmony {
+public class Harmony extends ArrayList<Scale> {
 
-	public ArrayList<Scale> chords = new ArrayList<>();
+	private static final long serialVersionUID = 1L;
+	
 	public ArrayList<Melody> arpeggio = null;
 	
 	public void addChord(ArrayList<Melody> lines, Scale scale) {
 		int rootPitch = 999; // Lowest pitch
 		Note rootPos = null;
 		for (Melody line : lines) {
-			for (NotePlay note : line.notes) {
+			for (NotePlay note : line) {
 				if (note.note == null) {
 					continue;
 				}
@@ -29,20 +30,20 @@ public class Harmony {
 		if (arpeggio == null) {
 			arpeggio = new ArrayList<Melody>();
 			for (Melody line : lines) {
-				scale.convert(line.notes, root);
+				scale.convert(line, root);
 				arpeggio.add(line);
 			}
 		}
-		chords.add(root);
+		add(root);
 	}
 	
 	public ArrayList<Melody> asMelodyLines(Scale scale, int len) {
 		ArrayList<Melody> melodies = new ArrayList<>();
-		for (int c = 0; c < chords.size(); c++) {
+		for (int c = 0; c < size(); c++) {
 			for (Melody line : arpeggio) {
 				line = line.clone();
 				line.displace(c * len);
-				chords.get(c).convert(line.notes, scale);
+				get(c).convert(line, scale);
 				melodies.add(line);
 			}
 		}
@@ -53,14 +54,27 @@ public class Harmony {
 		Harmony harmony = new Harmony();
 		harmony.arpeggio = new ArrayList<>();
 		
-		for (Scale chord : chords) {
-			harmony.chords.add(chord.clone());
+		for (Scale chord : this) {
+			harmony.add(chord.clone());
 		}
 		for (Melody line : arpeggio) {
 			harmony.arpeggio.add(line.clone());
 		}
 		
 		return harmony;
+	}
+
+	
+	// ==================================================================================
+	// Statistics
+	// ==================================================================================
+	
+	public static class Stats {
+		
+	}
+	
+	public Stats getStats(Scale scale) {
+		return new Stats();
 	}
 	
 }

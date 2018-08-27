@@ -4,23 +4,17 @@ import java.util.ArrayList;
 
 public class Scale {
 
-	/**
-	 * The number of semitones from the step i to the i + 1 in the Ionian mode.
-	 */
+	// The number of semitones from the step i to the i + 1 in the Ionian mode.
 	private final static int[] C_MAJOR_STEPS = new int[] { 
 		2, 2, 1, 2, 2, 2, 1 
 	};
 	
-	/**
-	 * The number of sharps (positive) or flats (negative) of each pitch class in Ionian mode.
-	 */
+	// The number of sharps (positive) or flats (negative) of each pitch class in Ionian mode.
 	private final static int[] MAJOR_SIGNATURES = new int[] { 
 		0, -5, 2, -3, 4, -1, 6, 1, -4, 3, -2, 5 
 	};
 	
-	/**
-	 * The names of each mode from 0 to 6.
-	 */
+	// The names of each mode from 0 to 6.
 	private final static String[] MODE_NAMES = new String[] {
 		"Ionian (major)",
 		"Dorian",
@@ -31,15 +25,26 @@ public class Scale {
 		"Locrian"
 	};
 	
+	// Greek mode from 0 to 6.
 	public final int mode;
-	public final int root;
-	public final int signature;
-	public final String name;
 	
+	// Root MIDI pitch.
+	public final int root;
+	
+	// Number or sharps or flats.
+	public final int signature;
+	
+	// True element i means that pitch class i (from 0 to 11) is on this scale.
 	public final boolean[] contains = new boolean[12];
+	
+	// Element i is the number of semitones between the root and i-th note.
 	public final int[] steps = new int[7];
-	public final int[] accidentals = new int[7];
+	
+	// Element i is the position of pitch value (C to B) in this scale.
 	public final int[] positions = new int[7];
+	
+	// Element i is the accidental of the pitch value of the i-th note.
+	public final int[] accidentals = new int[7];
 	
 	// ==================================================================================
 	// Initialization
@@ -55,12 +60,6 @@ public class Scale {
 		this.mode = mode;
 		this.signature = sig;
 		
-		String rootName = new jm.music.data.Note(root, 1).getName();
-		if (isMinor()) {
-			rootName = rootName.toLowerCase();
-		}
-		this.name = rootName + (root / 12) + " " + MODE_NAMES[mode];
-		
 		for (int i = 0; i < 12; i++)
 			this.contains[i] = false;
 		
@@ -74,8 +73,8 @@ public class Scale {
 			contains[pitch] = true;
 			
 			// Position of each pitch value (C major scale) in this scale
-			int pitchValue = (root + i) % 7;
-			positions[i] = pitchValue;
+			int pitchValue = getPitchValue(i);
+			positions[pitchValue] = i;
 			
 			// Accidentals of each pitch value in this scale
 			accidentals[i] = pitch - C_MAJOR_STEPS[pitchValue];
@@ -133,6 +132,10 @@ public class Scale {
 		return root + steps[pos % 7] + 12 * (pos / 7);
 	}
 	
+	public int getPitchValue(int pos) {
+		return (root % 12 + pos) % 7;
+	}
+	
 	/** Finds the note position of a given MIDI pitch.
 	 * @param pitch MIDI pitch.
 	 * @return Note's position relative to the root.
@@ -170,6 +173,9 @@ public class Scale {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
 	public Scale clone() {
 		return new Scale(root, mode, signature);
 	}
@@ -203,7 +209,11 @@ public class Scale {
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
-		return name;
+		String rootName = new jm.music.data.Note(root, 1).getName();
+		if (isMinor()) {
+			rootName = rootName.toLowerCase();
+		}
+		return rootName + (root / 12) + " " + MODE_NAMES[mode];
 	}
 
 }

@@ -2,7 +2,12 @@ package midi;
 
 import java.util.ArrayList;
 
-import music.*;
+import music.Composition;
+import music.Harmony;
+import music.Melody;
+import music.NotePlay;
+import music.Scale;
+import jm.music.data.Note;
 import jm.music.data.Part;
 import jm.music.data.Phrase;
 import jm.music.data.Rest;
@@ -13,7 +18,7 @@ public class Writer {
 
 	public static void write(String fileName, Composition composition) {
 		Score score = new Score();
-		score.setTempo(composition.bpm);
+		score.setTempo(composition.bps * 60);
 		score.setKeySignature(composition.scale.signature);
 		score.setKeyQuality(composition.scale.mode == 0 ? 0 : 1);
 		score.setTimeSignature(composition.numerator, composition.denominator);
@@ -38,18 +43,16 @@ public class Writer {
 	// ==================================================================================
 	
 	private static Phrase toPhrase(Melody melody, Scale scale) {
-		ArrayList<NotePlay> notes = melody.notes;
-		double duration = melody.duration;
 		Phrase phrase = new Phrase(0);
-		for (int i = 0; i < notes.size(); i++) {
-			double end = i < notes.size() - 1 ? notes.get(i + 1).time : duration;
-			NotePlay note = notes.get(i);
-			if (note.note == null) {
-				phrase.addRest(new Rest(end - note.time));
-			} else {
-				phrase.addNote(note.note.getMIDIPitch(scale), end - note.time);
-				phrase.getNote(i).setDuration(end - note.time - 0.0001);
+		double lastTime = 0;
+		for (NotePlay np : melody) {
+			if (np.time > lastTime) {
+				phrase.addRest(new Rest(np.time - lastTime));
 			}
+			Note note = new Note(np.note.getMIDIPitch(scale), np.duration);
+			note.setDuration(np.duration - 0.0001);
+			phrase.add(note);
+			lastTime = np.time + np.duration;
 		}
 		return phrase;
 	}

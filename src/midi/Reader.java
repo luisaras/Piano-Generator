@@ -21,7 +21,7 @@ public class Reader {
 		Composition composition = new Composition();
 		composition.numerator = score.getNumerator();
 		composition.denominator = score.getDenominator();
-		composition.bpm = score.getTempo();
+		composition.bps = score.getTempo() / 60;
 		
 		int sig = score.getKeySignature();
 		int mode = score.getKeyQuality() == 0 ? 0 : 5;
@@ -48,24 +48,16 @@ public class Reader {
 	// ==================================================================================
 	
 	private static Melody toMelody(Phrase phrase, Composition composition) {
-		ArrayList<NotePlay> notes = new ArrayList<>();
-		double start = phrase.getStartTime();
-		if (start > 0)
-			notes.add(new NotePlay(null, 0));
+		Melody notes = new Melody(composition.duration * composition.numerator);
 		for (int i = 0; i < phrase.size(); i++) {
 			jm.music.data.Note note = phrase.getNote(i);
-			double time = phrase.getNoteStartTime(i);
-			if (note.isRest()) {
-				notes.add(new NotePlay(null, time));
-			} else {
+			if (!note.isRest()) {
 				Note pos = composition.scale.getPosition(note.getPitch());
-				notes.add(new NotePlay(pos, time));
+				double time = phrase.getNoteStartTime(i);
+				notes.add(new NotePlay(pos, time, note.getDuration()));
 			}
 		}
-		double songDuration = composition.duration * composition.numerator;
-		if (phrase.getEndTime() < songDuration)
-			notes.add(new NotePlay(null, phrase.getEndTime()));
-		return new Melody(notes, songDuration);
+		return notes;
 	}
 	
 	// ==================================================================================

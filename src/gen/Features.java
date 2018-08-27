@@ -1,65 +1,52 @@
 package gen;
 
 import music.Composition;
-import music.NotePlay;
 
 public class Features {
 
-	public static final double[] weights = new double[] { 1, 1, 1, 1 };
+	public static final double[] weights = new double[] { 
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
+	};
 	
 	public static double[] calculate(Composition piece) {
 		double[] features = new double[weights.length];
 		
-		double duration = piece.getDuration();
-		double beatToSecond = 60 / piece.bpm;
+		Composition.Stats stats = piece.getStats();
 		
 		// ==================================================================================
 		// Rhythm
 		// ==================================================================================
 		
-		double noteDuration = 0;
-		int noteCount = 0;
-		int[] mNoteCounts = new int[piece.duration];
-		for (int i = 0; i < piece.melody.notes.size(); i++) {
-			NotePlay play = piece.melody.notes.get(i);
-			if (play.note != null) {
-				noteCount ++;
-				mNoteCounts[(int)(play.time / piece.numerator)]++;
-				double end = i == piece.melody.notes.size() - 1 ?
-						piece.duration * piece.numerator :
-						piece.melody.notes.get(i + 1).time;
-				noteDuration += (end - play.time);
-			}
-		}
-		
 		// Notes per second
-		features[0] = noteCount / duration;
+		features[0] = stats.notesPerSecond;
 		
-		// Notes per second variation (per measure)
-		for (int i = 0; i < mNoteCounts.length; i++) {
-			double d = features[0] - mNoteCounts[i] / duration;
-			features[1] += d * d;
-		}
+		// ==================================================================================
+		// Melody
+		// ==================================================================================
 		
-		// Average note duration
-		features[2] = noteDuration / noteCount * beatToSecond;
+		// Note duration
+		features[1] = stats.melody.durationMean;
+		features[2] = Math.sqrt(stats.melody.durationVariation);
 		
-		double lastNote = -1;
-		int attackCount = 0;
-		double attacks = 0;
-		for(int i = piece.melody.notes.size() - 1; i >= 0; i--) {
-			NotePlay play = piece.melody.notes.get(i);
-			if (play.note != null) {
-				if (lastNote >= 0) {
-					attackCount++;
-					attacks += lastNote - play.time;
-				}
-				lastNote = play.time;
-			}
-		}
+		// Attack distance
+		features[3] = stats.melody.attackMean;
+		features[4] = Math.sqrt(stats.melody.attackVariation);
 		
-		// Average attack distance
-		features[3] = attacks / attackCount * beatToSecond;
+		// Note pitch
+		features[5] = stats.melody.pitchMean;
+		features[6] = Math.sqrt(stats.melody.pitchVariation);
+		
+		// Note position
+		features[7] = stats.melody.noteMean;
+		features[8] = Math.sqrt(stats.melody.noteVariation);
+		
+		// Note function
+		features[9] = stats.melody.functionMean;
+		features[10] = Math.sqrt(stats.melody.functionVariation);
+		
+		// Note accidental
+		features[11] = stats.melody.accidentalMean;
+		features[12] = Math.sqrt(stats.melody.accidentalVariation);
 		
 		return features;
 	}

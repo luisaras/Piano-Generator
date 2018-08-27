@@ -12,8 +12,12 @@ public class Note {
 		octaves = oct; 
 	}
 	
+	public int getPitch(Scale scale) {
+		return getMIDIPitch(scale) - scale.root;
+	}
+	
 	public int getMIDIPitch(Scale scale) {
-		return octaves * 12 + scale.steps[function] + accidental + scale.root;
+		return octaves * 12 + accidental + scale.getPitch(function);
 	}
 	
 	public String toString() {

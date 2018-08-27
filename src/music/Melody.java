@@ -2,23 +2,23 @@ package music;
 
 import java.util.ArrayList;
 
-public class Melody {
+public class Melody extends ArrayList<NotePlay> {
+
+	private static final long serialVersionUID = 1L;
 	
-	public ArrayList<NotePlay> notes;
 	public double duration;
 	
 	// ==================================================================================
 	// Initialization
 	// ==================================================================================
 	
-	public Melody(ArrayList<NotePlay> notes, double duration) {
-		this.notes = notes;
+	public Melody(double duration) {
 		this.duration = duration;
 	}
 	
 	public String toString() {
 		String s = "";
-		for (NotePlay n : notes) {
+		for (NotePlay n : this) {
 			if (n.note != null)
 				s += n.note.function + " ";
 		}
@@ -26,11 +26,11 @@ public class Melody {
 	}
 	
 	public Melody clone() {
-		ArrayList<NotePlay> notes = new ArrayList<>();
-		for (NotePlay n : this.notes) {
+		Melody notes = new Melody(this.duration);
+		for (NotePlay n : this) {
 			notes.add(n.clone());
 		}
-		return new Melody(notes, this.duration);
+		return notes;
 	}
 	
 	// ==================================================================================
@@ -38,38 +38,26 @@ public class Melody {
 	// ==================================================================================
 	
 	public void setDuration(int duration) {
-		if (duration > this.duration) {
-			notes.add(new NotePlay(null, this.duration));
-			this.duration = duration;
-		} else if (duration < this.duration) {
-			for (int i = notes.size() - 1; i >= 0; i--) {
-				if (notes.get(i).time >= duration) {
-					notes.remove(i);
+		if (duration < this.duration) {
+			for (int i = size() - 1; i >= 0; i--) {
+				NotePlay note = get(i);
+				if (note.time >= duration) {
+					remove(i);
 				} else {
-					break;
+					note.duration = Math.min(note.duration, duration - note.time);
 				}
 			}
-			this.duration = duration;
 		}
+		this.duration = duration;
 	}
 	
 	public void displace(int time) {
 		if (time > 0) {
-			for (NotePlay note : notes) {
+			for (NotePlay note : this) {
 				note.time += time;
 			}
-			notes.add(0, new NotePlay(null, 0));
 			duration += time;
 		}
-	}
-	
-	public int noteCount() {
-		int c = 0;
-		for (NotePlay note : notes) {
-			if (note.note != null)
-				c++;
-		}
-		return c;
 	}
 	
 	// ==================================================================================
@@ -77,28 +65,31 @@ public class Melody {
 	// ==================================================================================
 	
 	public Melody cut(double start, double end) {
-		ArrayList<NotePlay> subMelody = new ArrayList<>();
-		for(NotePlay note : notes) {
+		Melody subMelody = new Melody(end - start);
+		for(NotePlay note : this) {
 			if (note.time >= start - 0.1) {
 				if (note.time >= end) {
 					break;
 				}
-				subMelody.add(new NotePlay(note.note, note.time - start));
+				double time = note.time - start;
+				double duration = Math.min(note.duration, end - time);
+				subMelody.add(new NotePlay(note.note.clone(), time, duration));
 			}
 		}
-		return new Melody(subMelody, end - start);
+		return subMelody;
 	}
 	
 	public Melody concatenate(Melody other) {
-		ArrayList<NotePlay> notes = new ArrayList<>();
-		for (NotePlay note : this.notes) {
-			notes.add(new NotePlay(note.note, note.time));
+		Melody notes = new Melody(duration + other.duration);
+		for (NotePlay note : this) {
+			notes.add(note.clone());
 		}
-		notes.add(new NotePlay(null, duration));
-		for (NotePlay note : other.notes) {
-			notes.add(new NotePlay(note.note, note.time + duration));
+		for (NotePlay note : other) {
+			note = note.clone();
+			note.time += duration;
+			notes.add(note);
 		}
-		return new Melody(notes, duration + other.duration);
+		return notes;
 	}
 	
 	// ==================================================================================
@@ -107,41 +98,92 @@ public class Melody {
 
 	public static class Stats {
 		
-		public double averageFunction = 0;
-		public double averageOctave = 0;
-		public double averageAccidental = 0;
+		public double pitchMean = 0;
+		public double pitchVariation = 0;
 		
+		public double noteMean = 0;
+		public double noteVariation = 0;
+		
+		public double functionMean = 0;
 		public double functionVariation = 0;
+		
+		public double octaveMean = 0;
 		public double octaveVariation = 0;
+		
+		public double accidentalMean = 0;
 		public double accidentalVariation = 0;
+		
+		public double durationMean = 0;
+		public double durationVariation = 0;
+		
+		public double attackMean = 0;
+		public double attackVariation = 0;
 		
 	}
 	
-	public Stats getStats() {
+	public Stats getStats(Scale scale) {
+		return getStats(scale, 0, duration);
+	}
+	
+	public Stats getStats(Scale scale, double start, double end) {
 		Stats s = new Stats();
 		
-		int noteCount = noteCount();
-		for (NotePlay np : notes) {
-			if (np.note != null) {
-				s.averageFunction += np.note.function;
-				s.averageOctave += np.note.octaves;
-				s.averageAccidental += np.note.accidental;
+		double lastAttack = -1;
+		for (NotePlay np : this) {
+			if (np.time >= end)
+				break;
+			if (np.time >= start) {
+				s.pitchMean += np.note.getPitch(scale);
+				s.noteMean += np.note.getPitch(scale) % 12;
+				s.functionMean += np.note.function;
+				s.octaveMean += np.note.octaves;
+				s.accidentalMean += np.note.accidental;
+				s.durationMean += np.duration;
+				if (lastAttack >= 0) {
+					s.attackMean += np.time - lastAttack;
+				}
+				lastAttack = np.time;
 			}
 		}
-		s.averageFunction /= noteCount;
-		s.averageOctave /= noteCount;
-		s.averageAccidental /= noteCount;
+		s.pitchMean /= size();
+		s.noteMean /= size();
+		s.functionMean /= size();
+		s.octaveMean /= size();
+		s.accidentalMean /= size();
+		s.durationMean /= size();
+		s.attackMean /= size() - 1;
 		
-		for (NotePlay np : notes) {
-			if (np.note != null) {
-				double f = np.note.function - s.averageFunction;
-				double o = np.note.octaves - s.averageOctave;
-				double a = np.note.accidental - s.averageAccidental;
+		lastAttack = -1;
+		for (NotePlay np : this) {
+			if (np.time >= end)
+				break;
+			if (np.time >= start) {
+				if (lastAttack >= 0) {
+					double a = np.time - lastAttack - s.accidentalMean;
+					s.attackVariation += a * a;
+					lastAttack = np.time;
+				}
+				double p = np.note.getPitch(scale) - s.pitchMean;
+				double n = np.note.getPitch(scale) % 12 - s.noteMean;
+				double f = np.note.function - s.functionMean;
+				double o = np.note.octaves - s.octaveMean;
+				double a = np.note.accidental - s.accidentalMean;
+				double d = np.duration - s.durationMean;
+				s.pitchVariation += p * p;
+				s.noteVariation += n * n;
 				s.functionVariation += f * f;
 				s.octaveVariation += o * o;
 				s.accidentalVariation += a * a;
+				s.durationVariation += d * d;
 			}
 		}
+		s.pitchVariation /= size();
+		s.noteVariation /= size();
+		s.functionVariation /= size();
+		s.octaveVariation /= size();
+		s.accidentalVariation /= size();
+		s.durationVariation /= size();
+		s.attackVariation /= size() - 1;
 		
 		return s;
 	}

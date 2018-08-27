@@ -1,17 +1,23 @@
 package gen;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 import music.Composition;
+import music.Harmony;
 import music.Melody;
 import music.Note;
 import music.NotePlay;
+import music.Scale;
 
 public class RandomGenerator {
 
 	Random rand = new Random(0);
+	
+	public double getDouble(double mean, double var) {
+		// TODO
+		return mean + (rand.nextDouble() - 0.5) * var;
+	}
 	
 	public Composition generate(Composition template) {
 		Composition composition = new Composition();
@@ -19,49 +25,55 @@ public class RandomGenerator {
 		composition.duration = template.duration;
 		composition.numerator = template.numerator;
 		composition.denominator = template.denominator;
-		composition.bpm = template.bpm + (rand.nextDouble() - 0.5) * template.bpm / 2;
+		composition.bps = template.bps + (rand.nextDouble() - 0.5) * template.bps / 2;
 		composition.scale = template.scale;
-		composition.melody = randomMelody(template.melody);
-		
-		{ // TODO: randomize harmony
-			composition.harmony = template.harmony.clone();
-		}
+		composition.melody = randomMelody(template.melody, template.scale);
+		composition.harmony = randomHarmony(template.harmony, template.scale);
 		
 		return composition;
 	}
 	
-	public Melody randomMelody(Melody template) {
-		ArrayList<NotePlay> notes = new ArrayList<>();
+	// ==================================================================================
+	// Melody
+	// ==================================================================================
+	
+	public Melody randomMelody(Melody template, Scale scale) {
+		Melody notes = new Melody(template.duration);
 		
-		int noteCount = template.noteCount();
+		int noteCount = template.size();
 		double[] attacks = new double[noteCount];
 		for (int i = 0; i < noteCount; i++) {
 			attacks[i] = rand.nextDouble() * template.duration;
 		}
 		Arrays.sort(attacks);
 		
-		Melody.Stats s = template.getStats();
+		Melody.Stats s = template.getStats(scale);
 		s.functionVariation = Math.sqrt(s.functionVariation);
 		s.octaveVariation = Math.sqrt(s.octaveVariation);
 		s.accidentalVariation = Math.sqrt(s.accidentalVariation);
 		for (int i = 0; i < noteCount; i++) {
-			double fd = s.averageFunction + (rand.nextDouble() - 0.5) * s.functionVariation;
-			double od = s.averageOctave + (rand.nextDouble() - 0.5) * s.octaveVariation;
-			double ad = s.averageAccidental + (rand.nextDouble() - 0.5) * s.accidentalVariation;
+			double fd = getDouble(s.functionMean, s.functionVariation);
+			double od = getDouble(s.octaveMean, s.octaveVariation);
+			double ad = getDouble(s.accidentalMean, s.accidentalVariation);
 			int func = (int) (Math.round(fd) + 7) % 7;
 			int oct = (int) Math.max(Math.round(od), 0);
 			int acc = (int) Math.round(ad);
 			Note note = new Note(func, acc, oct);
-			notes.add(new NotePlay(note, attacks[i]));
-			if (rand.nextBoolean()) {
-				double start = attacks[i];
-				double maxEnd = i < noteCount - 1 ? attacks[i + 1] : template.duration;
-				double end = rand.nextDouble() * (maxEnd - start) + start;
-				notes.add(new NotePlay(null, end));
-			}
+			double end = i < noteCount - 1 ? attacks[i + 1] : template.duration;
+			double duration = getDouble(s.durationMean, s.durationVariation);
+			notes.add(new NotePlay(note, attacks[i], Math.min(duration, end - attacks[i])));
 		}
 		
-		return new Melody(notes, template.duration);
+		return notes;
+	}
+	
+	// ==================================================================================
+	// Harmony
+	// ==================================================================================
+	
+	public Harmony randomHarmony(Harmony template, Scale scale) {
+		// TODO: randomize
+		return template.clone();
 	}
 	
 }
