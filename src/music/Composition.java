@@ -29,8 +29,16 @@ public class Composition {
 	}
 	
 	public Composition concatenate(Composition second) {
-		melody.concatenate(second.melody);
-		harmony.concatenate(second.harmony);
+		if (melody == null)
+			melody = second.melody;
+		else
+			melody.concatenate(second.melody);
+		
+		if (harmony == null)
+			harmony = second.harmony;
+		else
+			harmony.concatenate(second.harmony);
+		
 		return this;
 	}
 	

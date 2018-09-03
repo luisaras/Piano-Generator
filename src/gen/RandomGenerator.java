@@ -3,6 +3,7 @@ package gen;
 import java.util.Arrays;
 import java.util.Random;
 
+import music.Chord;
 import music.Composition;
 import music.Harmony;
 import music.Melody;
@@ -20,17 +21,19 @@ public class RandomGenerator {
 	}
 	
 	public Composition generate(Composition template) {
+		Composition composition = randomSignature(template);
+		composition.melody = randomMelody(template.melody, template.scale);
+		composition.harmony = randomHarmony(template.harmony, template.scale);
+		return composition;
+	}
+	
+	public Composition randomSignature(Composition template) {
 		Composition composition = new Composition();
-		
 		composition.duration = template.duration;
 		composition.numerator = template.numerator;
 		composition.denominator = template.denominator;
 		composition.bps = template.bps + (rand.nextDouble() - 0.5) * template.bps / 2;
 		composition.scale = template.scale;
-		
-		composition.melody = randomMelody(template.melody, template.scale);
-		composition.harmony = randomHarmony(template.harmony, template.scale);
-		
 		return composition;
 	}
 	
@@ -44,7 +47,8 @@ public class RandomGenerator {
 		int noteCount = template.size();
 		double[] attacks = new double[noteCount];
 		for (int i = 0; i < noteCount; i++) {
-			attacks[i] = rand.nextDouble() * template.duration;
+			double t = rand.nextDouble() * template.duration;
+			attacks[i] = Math.floor(t * 64) / 64;
 		}
 		Arrays.sort(attacks);
 		
@@ -73,8 +77,13 @@ public class RandomGenerator {
 	// ==================================================================================
 	
 	public Harmony randomHarmony(Harmony template, Scale scale) {
-		// TODO: randomize
-		return template.clone();
+		Harmony harmony = new Harmony();
+		for (Chord chord : template) {
+			int oct = rand.nextInt(5) - 2;
+			Note tonic = new Note(rand.nextInt(7), 0, chord.tonic.octaves + oct);
+			harmony.add(new Chord(tonic, chord.arpeggio));
+		}
+		return harmony;
 	}
 	
 }

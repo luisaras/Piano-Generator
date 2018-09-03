@@ -5,7 +5,6 @@ import java.util.ArrayList;
 public class Chord {
 	
 	public Note tonic;
-	public Scale scale;
 	public ArrayList<Melody> arpeggio;
 	
 	public Chord(ArrayList<Melody> lines, Scale scale) {
@@ -22,20 +21,16 @@ public class Chord {
 				}
 			}
 		}
-		int mode = (scale.mode + tonic.function) % 7;
-		int sig = Scale.getSignature(rootPitch, mode);
-		this.scale = new Scale(rootPitch, mode, sig);
-		//System.out.println(root.toString() + " " + (rootPitch %12) + " " + root.mode);
+		Scale tonicScale = this.tonicScale(scale);
 		arpeggio = new ArrayList<Melody>();
 		for (Melody line : lines) {
-			scale.convert(line, this.scale);
+			scale.convert(line, tonicScale);
 			arpeggio.add(line);
 		}
 	}
 	
-	public Chord(Note tonic, Scale scale, ArrayList<Melody> arpeggio) {
+	public Chord(Note tonic, ArrayList<Melody> arpeggio) {
 		this.tonic = tonic;
-		this.scale = scale;
 		this.arpeggio = arpeggio;
 	}
 	
@@ -44,14 +39,22 @@ public class Chord {
 		for (Melody line : this.arpeggio) {
 			arpeggio.add(line.clone());
 		}
-		return new Chord(tonic.clone(), scale.clone(), arpeggio);
+		return new Chord(tonic.clone(), arpeggio);
 	}
 	
-	public ArrayList<Melody> asMelodyLines(Scale scale) {
+	public Scale tonicScale(Scale pieceScale) {
+		int root = tonic.getMIDIPitch(pieceScale);
+		int mode = (pieceScale.mode + tonic.function) % 7;
+		int sig = Scale.getSignature(root, mode);
+		return new Scale(root % 12, mode, sig);
+	}
+	
+	public ArrayList<Melody> asMelodyLines(Scale pieceScale) {
+		Scale tonicScale = this.tonicScale(pieceScale);
 		ArrayList<Melody> melodies = new ArrayList<>();
 		for (Melody line : arpeggio) {
 			line = line.clone();
-			this.scale.convert(line, scale);
+			tonicScale.convert(line, pieceScale);
 			melodies.add(line);
 		}
 		return melodies;
