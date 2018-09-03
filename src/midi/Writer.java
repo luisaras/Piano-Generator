@@ -33,8 +33,9 @@ public class Writer {
 			Part part = new Part("Harmony", 0, 1);
 			part.addPhraseList(toPhraseList(composition.harmony, composition));
 			score.addPart(part);
+			System.out.println(composition.harmony);
 		}
-		
+
 		Write.midi(score, fileName + ".mid");
 	}
 	

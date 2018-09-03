@@ -77,10 +77,15 @@ public class RandomGenerator {
 	// ==================================================================================
 	
 	public Harmony randomHarmony(Harmony template, Scale scale) {
+		int max = 0, min = 100;
+		for (Chord chord : template) {
+			max = Math.max(max, chord.tonic.octaves);
+			min = Math.min(min, chord.tonic.octaves);
+		}
 		Harmony harmony = new Harmony();
 		for (Chord chord : template) {
-			int oct = rand.nextInt(5) - 2;
-			Note tonic = new Note(rand.nextInt(7), 0, chord.tonic.octaves + oct);
+			int oct = rand.nextInt(max + 1 - min) + min;
+			Note tonic = new Note(rand.nextInt(7), 0, oct);
 			harmony.add(new Chord(tonic, chord.arpeggio));
 		}
 		return harmony;

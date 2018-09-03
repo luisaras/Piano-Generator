@@ -25,6 +25,14 @@ public class Harmony extends ArrayList<Chord> {
 		}
 		return harmony;
 	}
+	
+	public String toString() {
+		String s = get(0).toString();
+		for(int i = 1; i < size(); i++) {
+			s += "-" + get(i).toString();
+		}
+		return s;
+	}
 
 	// ==================================================================================
 	// Cross-over
@@ -33,7 +41,7 @@ public class Harmony extends ArrayList<Chord> {
 	public Harmony cut(int start, int end) {
 		Harmony harmony = new Harmony();
 		for (int i = start; i < end; i++) {
-			harmony.add(get(i));
+			harmony.add(get(i).clone());
 		}
 		return harmony;
 	}

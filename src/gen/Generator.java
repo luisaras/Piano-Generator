@@ -14,7 +14,7 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 200;
+	public int generationCount = 1;
 	public int populationSize = 20;
 	public int tournamentSize = 5;
 	
@@ -34,6 +34,7 @@ public class Generator extends RandomGenerator {
 	
 	public Generator(Composition templatePiece) {
 		template = new Individual(templatePiece);
+		print(template);
 		for (int i = 0; i < population.length; i++) {
 			do {
 				Composition piece = generate(template.piece);
@@ -43,10 +44,15 @@ public class Generator extends RandomGenerator {
 		Arrays.sort(population, comparator);
 	}
 	
+	public void print(Individual i) {
+		System.out.println(i.piece.scale);
+		System.out.println(i.piece.harmony);
+	}
+	
 	public void save() {
 		for (int i = 0; i < population.length; i++) {
-			midi.Writer.write("tests/piece" + i + "(" + population[i].distance + ")", 
-					population[i].piece);
+			midi.Writer.write("tests/" + template.piece.name + i + 
+					"(" + population[i].distance + ")", population[i].piece);
 		}
 	}
 	
@@ -54,9 +60,9 @@ public class Generator extends RandomGenerator {
 	// Generation
 	// ==================================================================================
 	
-	public float scaleMutation = 0.2f;
-	public float melodyMutation = 0.2f;
-	public float harmonyMutation = 0.2f;
+	public float scaleMutation = 0.5f;
+	public float melodyMutation = 0.5f;
+	public float harmonyMutation = 0.5f;
 	
 	public Composition generate() {
 		for (int i = 0; i < generationCount; i++) {
@@ -69,13 +75,7 @@ public class Generator extends RandomGenerator {
 	public void nextGeneration() {
 		for (int i = tournamentSize; i < population.length; i++) {
 			do {
-				Individual parent1 = population[rand.nextInt(tournamentSize)];
-				Individual parent2 = population[rand.nextInt(tournamentSize)];
-				// Cross-over
-				int point = rand.nextInt(parent1.piece.duration - 1) + 1;
-				Composition first = parent1.piece.cut(0, point);
-				Composition second = parent2.piece.cut(point, parent2.piece.duration);
-				Composition child = randomSignature(template.piece).concatenate(first).concatenate(second);
+				Composition child = crossover();
 				// Mutation
 				if (rand.nextDouble() < scaleMutation) {
 					mutateScale(child);
@@ -92,15 +92,25 @@ public class Generator extends RandomGenerator {
 		Arrays.sort(population, comparator);
 	}
 	
+	public Composition crossover() {
+		Individual parent1 = population[rand.nextInt(tournamentSize)];
+		Individual parent2 = population[rand.nextInt(tournamentSize)];
+		int point = rand.nextInt(parent1.piece.duration - 1) + 1;
+		Composition first = parent1.piece.cut(0, point);
+		Composition second = parent2.piece.cut(point, parent2.piece.duration);
+		return randomSignature(template.piece).concatenate(first).concatenate(second);
+	}
+	
 	// ==================================================================================
 	// Mutation
 	// ==================================================================================
 	
+	public float noteMutation = 0.5f;
 	public float functionMutation = 0.5f;
-	public float accidentalMutation = 0.05f;
-	public float octaveMutation = 0.1f;
-	public float durationMutation = 0.1f;
-	public float attackMutation = 0.05f;
+	public float accidentalMutation = 0.5f;
+	public float octaveMutation = 0.5f;
+	public float durationMutation = 0.5f;
+	public float attackMutation = 0.5f;
 	public float arpeggioMutation = 0f;
 	
 	public void mutateScale(Composition piece) {
@@ -134,7 +144,7 @@ public class Generator extends RandomGenerator {
 				// Decrease
 				if (note.function == 0) {
 					note.function = 6;
-					note.octaves--;
+					note.octaves = Math.max(0, note.octaves-1);
 				} else {
 					note.function--;
 				}
@@ -148,6 +158,24 @@ public class Generator extends RandomGenerator {
 	}
 	
 	public void mutateMelody(Melody melody, Scale scale) {
+		// Remove notes
+		for (int i = 0; i < melody.size(); i++) {
+			if (rand.nextDouble() < noteMutation) {
+				melody.remove(i);
+				i--;
+			}
+		}
+		// Split notes
+		for (int i = 0; i < melody.size(); i++) {
+			if (rand.nextDouble() < noteMutation) {
+				NotePlay orig = melody.get(i);
+				orig.duration /= 2;
+				NotePlay np = new NotePlay(orig.note.clone(), 
+						orig.time + orig.duration, orig.duration);
+				melody.add(np);
+			}
+		}
+		// Change notes
 		int next = 0;
 		for (NotePlay np : melody) {
 			next++;
@@ -155,8 +183,8 @@ public class Generator extends RandomGenerator {
 			double end = next < melody.size() ? melody.get(next).time : melody.duration;
 			// Change duration
 			if (rand.nextDouble() < durationMutation) {
-				double d = rand.nextDouble() * (end - np.time); 
-				np.duration = Math.floor(d * 64) / 64;
+				double d = rand.nextDouble() * (end - np.time - 1 / 64); 
+				np.duration = Math.floor(d * 64 + 1) / 64;
 			}
 			// Change start
 			if (rand.nextDouble() < attackMutation) {

@@ -13,15 +13,17 @@ public class Reader {
 	public static Composition read(String fileName) {
 		Score score = new Score();
 		try {
-			Read.midi(score, fileName + ".mid");
+			Read.midi(score, "templates/" + fileName + ".mid");
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 		Composition composition = new Composition();
+		composition.name = fileName;
 		composition.numerator = score.getNumerator();
 		composition.denominator = score.getDenominator();
 		composition.bps = score.getTempo() / 60;
+		composition.duration = (int) (score.getEndTime() / score.getNumerator());
 		
 		int sig = score.getKeySignature();
 		int mode = score.getKeyQuality() == 0 ? 0 : 5;
@@ -29,7 +31,6 @@ public class Reader {
 		
 		composition.scale = new Scale(root, mode, sig);
 		composition.duration = (int) score.getEndTime() / composition.numerator;
-		System.out.println(composition.scale.toString());
 
 		{ // Melody notes
 			Phrase phrase = score.getPart(0).getPhrase(0);

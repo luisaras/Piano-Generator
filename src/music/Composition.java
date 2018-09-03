@@ -2,9 +2,11 @@ package music;
 
 public class Composition {
 	
+	public String name;
+	
 	public Scale scale;
 	
-	public int duration = 4; // measures
+	public int duration; // measures
 	public int numerator; // beats
 	public int denominator; // beats / measure
 	public double bps; // beats / second
@@ -62,6 +64,7 @@ public class Composition {
 		s.seconds = duration * denominator / bps;
 		s.melody = melody.getStats(scale);
 		s.harmony = harmony.getStats(scale);
+		s.notesPerSecond = melody.size() / s.seconds;
 		
 		return s;
 	}

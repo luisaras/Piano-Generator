@@ -20,6 +20,10 @@ public class Note {
 		return octaves * 12 + accidental + scale.getPitch(function);
 	}
 	
+	public int getSteps() {
+		return octaves * 7 + function;
+	}
+	
 	public String toString() {
 		String acc = accidental < 0 ? "b" : accidental > 0 ? "#" : "";
 		return octaves + "oct " + (function + 1) + acc;

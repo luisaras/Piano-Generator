@@ -3,7 +3,7 @@ package gen;
 import music.Composition;
 
 public class Features {
-
+	
 	private static final double[] rhythmWeights = new double[] { 
 		1
 	};
