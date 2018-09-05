@@ -18,7 +18,7 @@ public class Writer {
 
 	public static void write(String fileName, Composition composition) {
 		Score score = new Score();
-		score.setTempo(composition.bps * 60);
+		score.setTempo(composition.bpm);
 		score.setKeySignature(composition.scale.signature);
 		score.setKeyQuality(composition.scale.mode == 0 ? 0 : 1);
 		score.setTimeSignature(composition.numerator, composition.denominator);

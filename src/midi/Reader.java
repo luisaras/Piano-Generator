@@ -22,7 +22,7 @@ public class Reader {
 		composition.name = fileName;
 		composition.numerator = score.getNumerator();
 		composition.denominator = score.getDenominator();
-		composition.bps = score.getTempo() / 60;
+		composition.bpm = score.getTempo();
 		composition.duration = (int) (score.getEndTime() / score.getNumerator());
 		
 		int sig = score.getKeySignature();
@@ -67,11 +67,11 @@ public class Reader {
 	// ==================================================================================
 	
 	private static Harmony toHarmony(Part part, Composition composition) {
-		Harmony harmony = new Harmony();
 		ArrayList<Melody> lines = new ArrayList<>();
 		for (Phrase phrase : part.getPhraseArray()) {
 			lines.add(toMelody(phrase, composition));
 		}
+		Harmony harmony = new Harmony();
 		for (int i = 0; i < composition.duration; i++) {
 			ArrayList<Melody> chordLines = new ArrayList<>();
 			int start = i * composition.numerator;
@@ -79,7 +79,10 @@ public class Reader {
 			for (Melody line : lines) {
 				chordLines.add(line.cut(start, end));
 			}
-			harmony.add(new Chord(chordLines, composition.scale));
+			Chord chord = new Chord(chordLines, composition.scale);
+			harmony.add(chord);
+			if (harmony.arpeggio == null)
+				harmony.arpeggio = new Arpeggio(chordLines, composition.scale, chord);
 		}
 		return harmony;
 	}

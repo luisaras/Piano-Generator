@@ -34,7 +34,20 @@ public class Generator extends RandomGenerator {
 	
 	public Generator(Composition templatePiece) {
 		template = new Individual(templatePiece);
-		print(template);
+	}
+	
+	public void initializePopulation(Composition initialPiece) {
+		for (int i = 0; i < population.length; i++) {
+			Composition piece = initialPiece.clone();
+			do {
+				mutate(piece);
+				population[i] = new Individual(piece, template);
+			} while (Double.isNaN(population[i].distance));
+		}
+		Arrays.sort(population, comparator);
+	}
+	
+	public void initializePopulation() {
 		for (int i = 0; i < population.length; i++) {
 			do {
 				Composition piece = generate(template.piece);
@@ -43,6 +56,10 @@ public class Generator extends RandomGenerator {
 		}
 		Arrays.sort(population, comparator);
 	}
+	
+	// ==================================================================================
+	// Debug
+	// ==================================================================================
 	
 	public void print(Individual i) {
 		System.out.println(i.piece.scale);
@@ -60,10 +77,6 @@ public class Generator extends RandomGenerator {
 	// Generation
 	// ==================================================================================
 	
-	public float scaleMutation = 0.5f;
-	public float melodyMutation = 0.5f;
-	public float harmonyMutation = 0.5f;
-	
 	public Composition generate() {
 		for (int i = 0; i < generationCount; i++) {
 			nextGeneration();
@@ -76,16 +89,7 @@ public class Generator extends RandomGenerator {
 		for (int i = tournamentSize; i < population.length; i++) {
 			do {
 				Composition child = crossover();
-				// Mutation
-				if (rand.nextDouble() < scaleMutation) {
-					mutateScale(child);
-				}
-				if (rand.nextDouble() < melodyMutation) {
-					mutateMelody(child.melody, child.scale);
-				}
-				if (rand.nextDouble() < harmonyMutation) {
-					mutateHarmony(child.harmony, child.scale);
-				}
+				mutate(child);
 				population[i] = new Individual(child, template);
 			} while (Double.isNaN(population[i].distance)); 
 		}
@@ -104,6 +108,22 @@ public class Generator extends RandomGenerator {
 	// ==================================================================================
 	// Mutation
 	// ==================================================================================
+	
+	public float scaleMutation = 0.5f;
+	public float melodyMutation = 0.5f;
+	public float harmonyMutation = 0.5f;
+	
+	protected void mutate(Composition piece) {
+		if (rand.nextDouble() < scaleMutation) {
+			mutateScale(piece);
+		}
+		if (rand.nextDouble() < melodyMutation) {
+			mutateMelody(piece.melody, piece.scale);
+		}
+		if (rand.nextDouble() < harmonyMutation) {
+			mutateHarmony(piece.harmony, piece.scale);
+		}
+	}
 	
 	public float noteMutation = 0.5f;
 	public float functionMutation = 0.5f;
@@ -195,15 +215,15 @@ public class Generator extends RandomGenerator {
 	}
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
+		// Tonic
 		for (Chord chord : harmony) {
-			// Tonic
 			mutateNote(chord.tonic, scale);
-			// Arpeggio
-			if (rand.nextDouble() < arpeggioMutation) {
-				Scale tonicScale = chord.tonicScale(scale);
-				for (Melody line : chord.arpeggio)
-					mutateMelody(line, tonicScale);
-			}
+		}
+		// Arpeggio
+		if (rand.nextDouble() < arpeggioMutation) {
+			Scale tonicScale = harmony.get(0).tonicScale(scale);
+			for (Melody line : harmony.arpeggio)
+				mutateMelody(line, tonicScale);
 		}
 	}
 

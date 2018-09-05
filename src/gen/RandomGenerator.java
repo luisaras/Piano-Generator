@@ -3,6 +3,7 @@ package gen;
 import java.util.Arrays;
 import java.util.Random;
 
+import music.Arpeggio;
 import music.Chord;
 import music.Composition;
 import music.Harmony;
@@ -16,8 +17,7 @@ public class RandomGenerator {
 	private Random rand = new Random(0);
 	
 	public double getDouble(double mean, double var) {
-		// TODO
-		return mean + (rand.nextDouble() - 0.5) * var;
+		return mean + Math.sqrt((rand.nextDouble() - 0.5) * var);
 	}
 	
 	public Composition generate(Composition template) {
@@ -32,7 +32,7 @@ public class RandomGenerator {
 		composition.duration = template.duration;
 		composition.numerator = template.numerator;
 		composition.denominator = template.denominator;
-		composition.bps = template.bps + (rand.nextDouble() - 0.5) * template.bps / 2;
+		composition.bpm = template.bpm + (rand.nextDouble() - 0.5) * template.bpm / 2;
 		composition.scale = template.scale;
 		return composition;
 	}
@@ -83,11 +83,13 @@ public class RandomGenerator {
 			min = Math.min(min, chord.tonic.octaves);
 		}
 		Harmony harmony = new Harmony();
-		for (Chord chord : template) {
+		for (int i = 0; i < harmony.size(); i++) {
 			int oct = rand.nextInt(max + 1 - min) + min;
 			Note tonic = new Note(rand.nextInt(7), 0, oct);
-			harmony.add(new Chord(tonic, chord.arpeggio));
+			harmony.add(new Chord(tonic));
 		}
+		Arpeggio arpeggio = template.arpeggio.clone(); // TODO
+		harmony.arpeggio = arpeggio;
 		return harmony;
 	}
 	

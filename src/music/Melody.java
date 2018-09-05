@@ -5,7 +5,6 @@ import java.util.ArrayList;
 public class Melody extends ArrayList<NotePlay> {
 
 	private static final long serialVersionUID = 1L;
-	
 	public double duration;
 	
 	// ==================================================================================
