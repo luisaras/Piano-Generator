@@ -221,9 +221,7 @@ public class Generator extends RandomGenerator {
 		}
 		// Arpeggio
 		if (rand.nextDouble() < arpeggioMutation) {
-			Scale tonicScale = harmony.get(0).tonicScale(scale);
-			for (Melody line : harmony.arpeggio)
-				mutateMelody(line, tonicScale);
+			//TODO Scale tonicScale = harmony.get(0).tonicScale(scale);
 		}
 	}
 
