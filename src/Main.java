@@ -8,12 +8,24 @@ public class Main {
 	public static final String outputFile = "tests/Result";
 	
 	public static void main(String[] args) {
-		testConverter();
+		testRandomGenerator();
     }
 	
 	public static void testConverter() {
 		Composition templatePiece = midi.Reader.read(templateFile);
 		midi.Writer.write(templateFile, templatePiece);
+	}
+	
+	public static void testRandomGenerator() {
+		Composition templatePiece = midi.Reader.read(templateFile);
+		if (templatePiece == null) {
+			System.out.println("Could not read template: " + templateFile);
+			return;
+		}
+		Generator generator = new Generator(templatePiece);
+		generator.initializePopulation();
+		Composition outputPiece = generator.getFittest();
+		midi.Writer.write(outputFile, outputPiece);
 	}
 	
 	public static void testGenerator() {

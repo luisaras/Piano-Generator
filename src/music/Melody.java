@@ -92,17 +92,6 @@ public class Melody extends ArrayList<NotePlay> {
 	}
 	
 	// ==================================================================================
-	// Mutation
-	// ==================================================================================
-	
-	public void transpose(int src, int dest) {
-		for (NotePlay np : this) {
-			if (np.note.function == src)
-				np.note.function = dest;
-		}
-	}
-	
-	// ==================================================================================
 	// Statistics
 	// ==================================================================================
 
@@ -137,7 +126,11 @@ public class Melody extends ArrayList<NotePlay> {
 	
 	public Stats getStats(Scale scale, double start, double end) {
 		Stats s = new Stats();
-		
+		calculateStats(scale, start, end, s);
+		return s;
+	}
+	
+	protected void calculateStats(Scale scale, double start, double end, Stats s) {
 		double lastAttack = -1;
 		for (NotePlay np : this) {
 			if (np.time >= end)
@@ -194,8 +187,6 @@ public class Melody extends ArrayList<NotePlay> {
 		s.accidentalVariation /= size();
 		s.durationVariation /= size();
 		s.attackVariation /= size() - 1;
-		
-		return s;
 	}
 	
 }

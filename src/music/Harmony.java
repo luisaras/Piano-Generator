@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Harmony extends ArrayList<Chord> {
 
 	private static final long serialVersionUID = 1L;
+	
 	public Arpeggio arpeggio;
 	
 	// ==================================================================================
@@ -67,6 +68,9 @@ public class Harmony extends ArrayList<Chord> {
 		return harmony;
 	}
 	
+	/** Inserts all chords of another harmony into this one.
+	 * @param other Chords to be inserted at the end of this harmony.
+	 */
 	public void concatenate(Harmony other) {
 		for (Chord chord : other) {
 			add(chord);
@@ -79,10 +83,23 @@ public class Harmony extends ArrayList<Chord> {
 	
 	public static class Stats {
 		
+		Melody.Stats chords;
+		Arpeggio.Stats arpeggio;
+		
 	}
 	
 	public Stats getStats(Scale scale) {
-		return new Stats();
+		Stats s = new Stats();
+		s.arpeggio = arpeggio.getStats(scale);
+		
+		Melody melody = new Melody(arpeggio.duration * size());
+		int time = 0;
+		for (Chord chord : this) {
+			melody.add(new NotePlay(chord.tonic, time++, arpeggio.duration));
+		}
+		s.chords = melody.getStats(scale);
+		
+		return s;
 	}
 	
 }

@@ -6,9 +6,17 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 
 	private static final long serialVersionUID = 1L;
 	
-	public Arpeggio() {}
+	public double duration;
 	
-	public Arpeggio(ArrayList<Melody> lines, Scale scale, Chord chord) {
+	// ==================================================================================
+	// Initialization
+	// ==================================================================================
+	
+	public Arpeggio(double duration) {
+		this.duration = duration;
+	}
+	
+	public Arpeggio(ArrayList<Melody> lines, Scale scale, Chord chord, double duration) {
 		Scale tonic = chord.tonicScale(scale);
 		for (Melody line : lines) {
 			scale.convert(line, tonic);
@@ -16,6 +24,7 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 				insertNote(np);
 			}
 		}
+		this.duration = duration;
 	}
 	
 	public void insertNote(NotePlay np) {
@@ -37,23 +46,18 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 	}
 	
 	public Arpeggio clone() {
-		Arpeggio arpeggio = new Arpeggio();
+		Arpeggio arpeggio = new Arpeggio(duration);
 		for (ChordPlay cp : this) {
 			arpeggio.add(cp.clone());
 		}
 		return arpeggio;
 	}
 	
-	public double getDuration() {
-		double end = 0;
-		for (ChordPlay cp : this) {
-			end = Math.max(end, cp.time + cp.duration);
-		}
-		return end;
-	}
+	// ==================================================================================
+	// Debug
+	// ==================================================================================
 	
 	public ArrayList<Melody> getNotes(Scale pieceScale, Chord chord) {
-		double duration = getDuration();
 		Scale tonicScale = chord.tonicScale(pieceScale);
 		ArrayList<Melody> melodies = new ArrayList<>();
 		for (ChordPlay cp : this) {
@@ -68,5 +72,39 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 		}
 		return melodies;
 	}
+	
+	// ==================================================================================
+	// Statistics
+	// ==================================================================================
+	
+	public class Stats extends Melody.Stats {
+		
+		public double verticalNoteMean = 0;
+		public double verticalNoteVariation = 0;
+		
+	}
+	
+	public Stats getStats(Scale scale) {
+		Stats s = new Stats();
+		
+		Melody melody = new Melody(duration);
+		for(ChordPlay cp : this) {
+			s.verticalNoteMean += cp.size();
+			for (Note n : cp) {
+				melody.add(new NotePlay(n, cp.time, cp.duration));
+			}
+		}
+		s.verticalNoteMean /= size();
+		melody.calculateStats(scale, 0, duration, s);
+		
+		for (ChordPlay cp : this) {
+			double n = cp.size() / s.verticalNoteMean;
+			s.verticalNoteVariation += n * n;
+		}
+		s.verticalNoteVariation /= size();
+		
+		return s;
+	}
+
 	
 }

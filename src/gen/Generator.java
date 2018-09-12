@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
+import music.Arpeggio;
 import music.Chord;
 import music.Composition;
 import music.Harmony;
@@ -77,6 +78,10 @@ public class Generator extends RandomGenerator {
 	// Generation
 	// ==================================================================================
 	
+	public Composition getFittest() {
+		return population[0].piece;
+	}
+	
 	public Composition generate() {
 		for (int i = 0; i < generationCount; i++) {
 			nextGeneration();
@@ -125,20 +130,16 @@ public class Generator extends RandomGenerator {
 		}
 	}
 	
-	public float noteMutation = 0.5f;
-	public float functionMutation = 0.5f;
-	public float accidentalMutation = 0.5f;
-	public float octaveMutation = 0.5f;
-	public float durationMutation = 0.5f;
-	public float attackMutation = 0.5f;
-	public float arpeggioMutation = 0f;
-	
 	public void mutateScale(Composition piece) {
 		int root = piece.scale.root;
 		int mode = rand.nextInt(7);
 		int sig = Scale.getSignature(root, mode);
 		piece.scale = new Scale(root, mode, sig);
 	}
+	
+	public float functionMutation = 0.5f;
+	public float accidentalMutation = 0.5f;
+	public float octaveMutation = 0.5f;
 	
 	public void mutateNote(Note note, Scale scale) {
 		// Change accidental
@@ -177,6 +178,10 @@ public class Generator extends RandomGenerator {
 		}
 	}
 	
+	public float noteMutation = 0.5f;
+	public float durationMutation = 0.5f;
+	public float attackMutation = 0.5f;
+	
 	public void mutateMelody(Melody melody, Scale scale) {
 		// Remove notes
 		for (int i = 0; i < melody.size(); i++) {
@@ -199,9 +204,10 @@ public class Generator extends RandomGenerator {
 		int next = 0;
 		for (NotePlay np : melody) {
 			next++;
+			// Change pitch
 			mutateNote(np.note, scale);
-			double end = next < melody.size() ? melody.get(next).time : melody.duration;
 			// Change duration
+			double end = next < melody.size() ? melody.get(next).time : melody.duration;
 			if (rand.nextDouble() < durationMutation) {
 				double d = rand.nextDouble() * (end - np.time - 1 / 64); 
 				np.duration = Math.floor(d * 64 + 1) / 64;
@@ -214,6 +220,8 @@ public class Generator extends RandomGenerator {
 		}
 	}
 	
+	public float arpeggioMutation = 0f;
+	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
 		// Tonic
 		for (Chord chord : harmony) {
@@ -221,8 +229,18 @@ public class Generator extends RandomGenerator {
 		}
 		// Arpeggio
 		if (rand.nextDouble() < arpeggioMutation) {
-			//TODO Scale tonicScale = harmony.get(0).tonicScale(scale);
+			Scale tonicScale = harmony.get(0).tonicScale(scale);
+			mutateArpeggio(harmony.arpeggio, tonicScale);
 		}
+	}
+	
+	public void mutateArpeggio(Arpeggio arpeggio, Scale scale) {
+		// Remove notes
+		
+		// Insert notes
+		
+		// Change notes
+		
 	}
 
 }

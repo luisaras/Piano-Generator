@@ -82,7 +82,8 @@ public class Reader {
 			Chord chord = new Chord(chordLines, composition.scale);
 			harmony.add(chord);
 			if (harmony.arpeggio == null)
-				harmony.arpeggio = new Arpeggio(chordLines, composition.scale, chord);
+				harmony.arpeggio = new Arpeggio(chordLines, composition.scale,
+						chord, composition.numerator);
 		}
 		return harmony;
 	}

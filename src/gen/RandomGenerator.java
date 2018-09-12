@@ -5,6 +5,7 @@ import java.util.Random;
 
 import music.Arpeggio;
 import music.Chord;
+import music.ChordPlay;
 import music.Composition;
 import music.Harmony;
 import music.Melody;
@@ -16,8 +17,13 @@ public class RandomGenerator {
 
 	private Random rand = new Random(0);
 	
-	public double getDouble(double mean, double var) {
-		return mean + Math.sqrt((rand.nextDouble() - 0.5) * var);
+	public double randomDouble(double mean, double var) {
+		double v = (rand.nextDouble() - 0.5) * var;
+		if (v < 0) {
+			return mean - Math.sqrt(-v);
+		} else {
+			return mean + Math.sqrt(v);
+		}
 	}
 	
 	public Composition generate(Composition template) {
@@ -41,32 +47,36 @@ public class RandomGenerator {
 	// Melody
 	// ==================================================================================
 	
+	protected double[] randomAttacks(int size, double duration) {
+		double[] attacks = new double[size];
+		for (int i = 0; i < size; i++) {
+			double t = rand.nextDouble() * duration;
+			attacks[i] = Math.floor(t * 64) / 64;
+		}
+		Arrays.sort(attacks);
+		return attacks;
+	}
+	
 	public Melody randomMelody(Melody template, Scale scale) {
 		Melody notes = new Melody(template.duration);
 		
 		int noteCount = template.size();
-		double[] attacks = new double[noteCount];
-		for (int i = 0; i < noteCount; i++) {
-			double t = rand.nextDouble() * template.duration;
-			attacks[i] = Math.floor(t * 64) / 64;
-		}
-		Arrays.sort(attacks);
+		double[] attacks = randomAttacks(noteCount, template.duration);
 		
 		Melody.Stats s = template.getStats(scale);
-		s.functionVariation = Math.sqrt(s.functionVariation);
-		s.octaveVariation = Math.sqrt(s.octaveVariation);
-		s.accidentalVariation = Math.sqrt(s.accidentalVariation);
 		for (int i = 0; i < noteCount; i++) {
-			double fd = getDouble(s.functionMean, s.functionVariation);
-			double od = getDouble(s.octaveMean, s.octaveVariation);
-			double ad = getDouble(s.accidentalMean, s.accidentalVariation);
+			double fd = randomDouble(s.functionMean, s.functionVariation);
+			double od = randomDouble(s.octaveMean, s.octaveVariation);
+			double ad = randomDouble(s.accidentalMean, s.accidentalVariation);
 			int func = (int) (Math.round(fd) + 7) % 7;
 			int oct = (int) Math.max(Math.round(od), 0);
 			int acc = (int) Math.round(ad);
 			Note note = new Note(func, acc, oct);
 			double end = i < noteCount - 1 ? attacks[i + 1] : template.duration;
-			double duration = getDouble(s.durationMean, s.durationVariation);
-			notes.add(new NotePlay(note, attacks[i], Math.min(duration, end - attacks[i])));
+			double duration = randomDouble(s.durationMean, s.durationVariation);
+			duration = Math.min(duration, end - attacks[i]);
+			NotePlay np = new NotePlay(note, attacks[i], duration);
+			notes.add(np);
 		}
 		
 		return notes;
@@ -83,12 +93,27 @@ public class RandomGenerator {
 			min = Math.min(min, chord.tonic.octaves);
 		}
 		Harmony harmony = new Harmony();
-		for (int i = 0; i < harmony.size(); i++) {
+		for (int i = 0; i < template.size(); i++) {
 			int oct = rand.nextInt(max + 1 - min) + min;
 			Note tonic = new Note(rand.nextInt(7), 0, oct);
 			harmony.add(new Chord(tonic));
 		}
-		Arpeggio arpeggio = template.arpeggio.clone(); // TODO
+		Arpeggio arpeggio = new Arpeggio(template.arpeggio.duration);
+		Arpeggio.Stats s = template.arpeggio.getStats(scale);
+		double[] attacks = randomAttacks(template.arpeggio.size(), arpeggio.duration);
+		for(int i = 0; i < attacks.length; i++) {
+			double end = i < attacks.length - 1 ? attacks[i + 1] : arpeggio.duration;
+			double duration = randomDouble(s.durationMean, s.durationVariation);
+			duration = Math.min(duration, end - attacks[i]);
+			ChordPlay cp = new ChordPlay(attacks[i], duration);
+			int noteCount = (int) Math.round(randomDouble(s.verticalNoteMean - 1, s.verticalNoteVariation)) + 1;
+			for(int n = 0; n < noteCount; n++) {
+				int oct = (int) Math.round(randomDouble(s.octaveMean, s.octaveVariation));
+				int acc = (int) Math.round(randomDouble(s.accidentalMean, s.accidentalVariation));
+				cp.add(new Note(rand.nextInt(7), acc, oct));
+			}
+			arpeggio.add(cp);
+		}
 		harmony.arpeggio = arpeggio;
 		return harmony;
 	}
