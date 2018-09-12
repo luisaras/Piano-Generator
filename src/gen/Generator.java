@@ -6,6 +6,7 @@ import java.util.Random;
 
 import music.Arpeggio;
 import music.Chord;
+import music.ChordPlay;
 import music.Composition;
 import music.Harmony;
 import music.Melody;
@@ -15,7 +16,7 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 1;
+	public int generationCount = 100;
 	public int populationSize = 20;
 	public int tournamentSize = 5;
 	
@@ -137,6 +138,10 @@ public class Generator extends RandomGenerator {
 		piece.scale = new Scale(root, mode, sig);
 	}
 	
+	// ==================================================================================
+	// Mutation - Note
+	// ==================================================================================
+	
 	public float functionMutation = 0.5f;
 	public float accidentalMutation = 0.5f;
 	public float octaveMutation = 0.5f;
@@ -178,6 +183,10 @@ public class Generator extends RandomGenerator {
 		}
 	}
 	
+	// ==================================================================================
+	// Mutation - Melody
+	// ==================================================================================
+	
 	public float noteMutation = 0.5f;
 	public float durationMutation = 0.5f;
 	public float attackMutation = 0.5f;
@@ -197,7 +206,8 @@ public class Generator extends RandomGenerator {
 				orig.duration /= 2;
 				NotePlay np = new NotePlay(orig.note.clone(), 
 						orig.time + orig.duration, orig.duration);
-				melody.add(np);
+				melody.add(i + 1, np);
+				i++;
 			}
 		}
 		// Change notes
@@ -220,6 +230,10 @@ public class Generator extends RandomGenerator {
 		}
 	}
 	
+	// ==================================================================================
+	// Mutation - Harmony
+	// ==================================================================================
+	
 	public float arpeggioMutation = 0f;
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
@@ -228,19 +242,49 @@ public class Generator extends RandomGenerator {
 			mutateNote(chord.tonic, scale);
 		}
 		// Arpeggio
-		if (rand.nextDouble() < arpeggioMutation) {
-			Scale tonicScale = harmony.get(0).tonicScale(scale);
-			mutateArpeggio(harmony.arpeggio, tonicScale);
-		}
+		Scale tonicScale = harmony.get(0).tonicScale(scale);
+		mutateArpeggio(harmony.arpeggio, tonicScale);
 	}
 	
 	public void mutateArpeggio(Arpeggio arpeggio, Scale scale) {
 		// Remove notes
-		
+		for(int i = 0; i < arpeggio.size(); i++) {
+			if (rand.nextDouble() < arpeggioMutation) {
+				arpeggio.remove(i);
+				i--;
+			}
+		}
 		// Insert notes
-		
+		for(int i = 0; i < arpeggio.size(); i++) {
+			if (rand.nextDouble() < arpeggioMutation) {
+				ChordPlay orig = arpeggio.get(i);
+				orig.duration /= 2;
+				ChordPlay np = orig.clone();
+				np.time += orig.duration;
+				arpeggio.add(i + 1, np);
+				i++;
+			}
+		}
 		// Change notes
-		
+		int next = 0;
+		for (ChordPlay cp : arpeggio) {
+			next++;
+			// Change pitch
+			for (Note n : cp) {
+				mutateNote(n, scale);
+			}
+			// Change duration
+			double end = next < arpeggio.size() ? arpeggio.get(next).time : arpeggio.duration;
+			if (rand.nextDouble() < durationMutation) {
+				double d = rand.nextDouble() * (end - cp.time - 1 / 64); 
+				cp.duration = Math.floor(d * 64 + 1) / 64;
+			}
+			// Change start
+			if (rand.nextDouble() < attackMutation) {
+				double t = rand.nextDouble() * (end - cp.time) + cp.time;
+				cp.time = Math.floor(t * 64) / 64;
+			}
+		}
 	}
 
 }

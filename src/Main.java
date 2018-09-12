@@ -3,12 +3,12 @@ import gen.Generator;
 
 public class Main {
 	
-	public static final String templateFile = "Happy";
-	public static final String baseFile = "Sad";
+	public static final String templateFile = "Calm";
+	public static final String baseFile = null;//"Sad";
 	public static final String outputFile = "tests/Result";
 	
 	public static void main(String[] args) {
-		testRandomGenerator();
+		testGenerator();
     }
 	
 	public static void testConverter() {

@@ -83,8 +83,8 @@ public class Harmony extends ArrayList<Chord> {
 	
 	public static class Stats {
 		
-		Melody.Stats chords;
-		Arpeggio.Stats arpeggio;
+		public Melody.Stats chords;
+		public Arpeggio.Stats arpeggio;
 		
 	}
 	
