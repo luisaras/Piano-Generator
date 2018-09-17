@@ -97,6 +97,19 @@ public class Melody extends ArrayList<NotePlay> {
 	// Debug
 	// ==================================================================================
 	
+	public String toString() {
+		String s = "";
+		for (NotePlay n : this) {
+			if (n.note != null)
+				s += n.note.function + " ";
+		}
+		return s;
+	}
+	
+	// ==================================================================================
+	// Statistics
+	// ==================================================================================
+	
 	public double[] getAttacks() {
 		ArrayList<Double> attacks = new ArrayList<>();
 		double lastTime = get(0).time;
@@ -130,13 +143,24 @@ public class Melody extends ArrayList<NotePlay> {
 		return rests.toArray(new NotePlay[rests.size()]);
 	}
 	
-	public String toString() {
-		String s = "";
-		for (NotePlay n : this) {
-			if (n.note != null)
-				s += n.note.function + " ";
+	public int[] getPitches(Scale scale) {
+		int[] pitches = new int[128];
+		for(NotePlay np : this) {
+			int pitch = np.note.getMIDIPitch(scale);
+			if (pitch >= 0 && pitch <= 127)
+				pitches[pitch]++;
 		}
-		return s;
+		return pitches;
+	}
+	
+	public int[] getPitchClasses(Scale scale) {
+		int[] pitches = new int[12];
+		for(NotePlay np : this) {
+			int pitch = np.note.getMIDIPitch(scale) % 12;
+			if (pitch >= 0 && pitch <= 11)
+				pitches[pitch]++;
+		}
+		return pitches;
 	}
 	
 }

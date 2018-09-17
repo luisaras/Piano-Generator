@@ -14,20 +14,12 @@ public class Features {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
-	private static final double[] melodyWeights = new double[] {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-	
-	private static final double[] chordsWeights = new double[] {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-	
-	private static final double[] arpeggioWeights = new double[] {
+	private static final double[] pitchWeights = new double[] { 
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
 	public static final double[][] weights = new double[][] { 
-		rhythmWeights, melodyWeights, chordsWeights, arpeggioWeights
+		rhythmWeights, pitchWeights
 	};
 	
 	public static double[][] calculate(Composition piece) {
@@ -109,7 +101,105 @@ public class Features {
 
 		}
 		
-		return new double[][] { rhythm };
+		// ==================================================================================
+		// Pitch
+		// ==================================================================================
+		
+		double[] pitch = new double[pitchWeights.length];
+		
+		{
+			int[] pitchCount = mergedTracks.getPitches(piece.scale);
+			int[] classCount = mergedTracks.getPitchClasses(piece.scale);
+			
+			// Most common pitch
+			int firstPitch = 0, secondPitch = 1;
+			if (pitchCount[1] > pitchCount[0])
+				secondPitch = 0; firstPitch = 1;
+			for (int i = 0; i < pitchCount.length; i++) {
+				if (pitchCount[i] > pitchCount[firstPitch]) {
+					secondPitch = firstPitch;
+					firstPitch = 0;
+				}
+			}
+			pitch[0] = pitchCount[firstPitch] / mergedTracks.size();
+			
+			// Most common pitch class
+			int firstClass = 0, secondClass = 1;
+			if (classCount[1] > classCount[0])
+				secondClass = 0; firstClass = 1;
+			for (int i = 0; i < classCount.length; i++) {
+				if (classCount[i] > classCount[firstPitch]) {
+					secondClass = firstClass;
+					firstClass = 0;
+				}
+			}
+			pitch[1] = classCount[firstClass] / mergedTracks.size();
+			
+			// Relative strength of top pitches
+			pitch[2] = pitchCount[secondPitch] / pitchCount[firstPitch];
+			
+			// Relative strength of top pitch classes
+			pitch[3] = classCount[secondClass] / classCount[firstClass];
+			
+			// Interval between top pitches
+			pitch[4] = Math.abs(firstPitch - secondPitch);
+			
+			// Interval between top pitch classes
+			pitch[5] = Math.abs(firstClass - secondClass);
+			
+			// Number of common pitches
+			double minimum = mergedTracks.size() * 0.09;
+			for (int i = 0; i < pitchCount.length; i++)
+				if (pitchCount[i] >= minimum)
+					pitch[6]++;
+			
+			// Pitch variety
+			for (int i = 0; i < pitchCount.length; i++)
+				if (pitchCount[i] > 0)
+					pitch[7]++;
+			
+			// Pitch class variety
+			for (int i = 0; i < classCount.length; i++)
+				if (classCount[i] > 0)
+					pitch[8]++;
+			
+			// Range
+			int lowest = 0, highest = 127;
+			while (pitchCount[lowest] == 0)
+				lowest++;
+			while (pitchCount[highest] == 0)
+				highest--;
+			pitch[9] = highest - lowest;
+			
+			// Primary register
+			for (NotePlay np : mergedTracks)
+				pitch[10] += np.note.getMIDIPitch(piece.scale);
+			pitch[10] /= mergedTracks.size();
+			
+			// Importance of bass register
+			for (double count : pitchCount) {
+				if (count <= 54)
+					pitch[11]++;
+			}
+			pitch[11] /= mergedTracks.size();
+			
+			// Importance of middle register
+			for (double count : pitchCount) {
+				if (54 <= count && count <= 72)
+					pitch[12]++;
+			}
+			pitch[12] /= mergedTracks.size();
+			
+			// Importance of high register
+			for (double count : pitchCount) {
+				if (73 <= count)
+					pitch[13]++;
+			}
+			pitch[13] /= mergedTracks.size();
+			
+		}
+		
+		return new double[][] { rhythm, pitch };
 	}
 	
 }
