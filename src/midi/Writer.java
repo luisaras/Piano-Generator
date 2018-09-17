@@ -64,7 +64,7 @@ public class Writer {
 	
 	private static Phrase[] toPhraseList(Harmony harmony, Composition composition) {
 		ArrayList<Phrase> phrases = new ArrayList<>();
-		ArrayList<Melody> lines = harmony.asMelodyLines(composition.scale, composition.numerator);
+		ArrayList<Melody> lines = harmony.asMelodyLines(composition.scale);
 		for (Melody melody : lines) {
 			Phrase phrase = toPhrase(melody, composition.scale);
 			phrase.setAppend(false);

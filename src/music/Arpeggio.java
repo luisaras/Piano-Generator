@@ -73,38 +73,16 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 		return melodies;
 	}
 	
-	// ==================================================================================
-	// Statistics
-	// ==================================================================================
-	
-	public class Stats extends Melody.Stats {
-		
-		public double verticalNoteMean = 0;
-		public double verticalNoteVariation = 0;
-		
-	}
-	
-	public Stats getStats(Scale scale) {
-		Stats s = new Stats();
-		
+	public Melody asMelody(Scale pieceScale, Chord chord) {
 		Melody melody = new Melody(duration);
-		for(ChordPlay cp : this) {
-			s.verticalNoteMean += cp.size();
-			for (Note n : cp) {
+		for (ChordPlay cp : this) {
+			for(Note n : cp) {
 				melody.add(new NotePlay(n, cp.time, cp.duration));
 			}
 		}
-		s.verticalNoteMean /= size();
-		melody.calculateStats(scale, 0, duration, s);
-		
-		for (ChordPlay cp : this) {
-			double n = cp.size() / s.verticalNoteMean;
-			s.verticalNoteVariation += n * n;
-		}
-		s.verticalNoteVariation /= size();
-		
-		return s;
+		Scale tonicScale = chord.tonicScale(pieceScale);
+		tonicScale.convert(melody, pieceScale);
+		return melody;
 	}
-
 	
 }

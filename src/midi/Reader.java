@@ -23,14 +23,14 @@ public class Reader {
 		composition.numerator = score.getNumerator();
 		composition.denominator = score.getDenominator();
 		composition.bpm = score.getTempo();
-		composition.duration = (int) (score.getEndTime() / score.getNumerator());
+		composition.length = (int) (score.getEndTime() / score.getNumerator());
 		
 		int sig = score.getKeySignature();
 		int mode = score.getKeyQuality() == 0 ? 0 : 5;
 		int root = Scale.getRoot(sig, mode);
 		
 		composition.scale = new Scale(root, mode, sig);
-		composition.duration = (int) score.getEndTime() / composition.numerator;
+		composition.length = (int) score.getEndTime() / composition.numerator;
 
 		{ // Melody notes
 			Phrase phrase = score.getPart(0).getPhrase(0);
@@ -50,7 +50,7 @@ public class Reader {
 	// ==================================================================================
 	
 	private static Melody toMelody(Phrase phrase, Composition composition) {
-		Melody notes = new Melody(composition.duration * composition.numerator);
+		Melody notes = new Melody(composition.length * composition.numerator);
 		for (int i = 0; i < phrase.size(); i++) {
 			jm.music.data.Note note = phrase.getNote(i);
 			if (!note.isRest()) {
@@ -72,7 +72,7 @@ public class Reader {
 			lines.add(toMelody(phrase, composition));
 		}
 		Harmony harmony = new Harmony();
-		for (int i = 0; i < composition.duration; i++) {
+		for (int i = 0; i < composition.length; i++) {
 			ArrayList<Melody> chordLines = new ArrayList<>();
 			int start = i * composition.numerator;
 			int end = (i + 1) * composition.numerator;

@@ -6,7 +6,7 @@ public class Composition {
 	
 	public Scale scale;
 	
-	public int duration; // measures
+	public int length; // measures
 	public int numerator; // beats
 	public int denominator; // beats / measure
 	public double bpm; // beats / second
@@ -15,7 +15,7 @@ public class Composition {
 	public Melody melody;
 	
 	public Composition clone() {
-		return cut(0, duration);
+		return cut(0, length);
 	}
 	
 	// ==================================================================================
@@ -29,7 +29,7 @@ public class Composition {
 	 */
 	public Composition cut(int start, int end) {
 		Composition composition = new Composition();
-		composition.duration = duration;
+		composition.length = length;
 		composition.numerator = numerator;
 		composition.denominator = denominator;
 		composition.bpm = bpm;
@@ -51,29 +51,15 @@ public class Composition {
 		return this;
 	}
 	
-	// ==================================================================================
-	// Statistics
-	// ==================================================================================
-	
-	public static class Stats {
-		
-		public double seconds = 0;
-		public double notesPerSecond = 0;
-		
-		public Melody.Stats melody;
-		public Harmony.Stats harmony;
-		
+	public Melody mergeTracks() {
+		Melody tracks = harmony.asMelody(scale);
+		tracks.addAll(melody);
+		tracks.sort();
+		return tracks;
 	}
 	
-	public Stats getStats() {
-		Stats s = new Stats();
-		
-		s.seconds = duration * denominator * 60 / bpm;
-		s.melody = melody.getStats(scale);
-		s.harmony = harmony.getStats(scale);
-		s.notesPerSecond = melody.size() / s.seconds;
-		
-		return s;
+	public double getMinutes() {
+		return length * denominator / bpm;
 	}
 	
 }

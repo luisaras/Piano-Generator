@@ -2,6 +2,7 @@ package gen;
 
 import music.Composition;
 import music.Melody;
+import music.NotePlay;
 
 public class Features {
 	
@@ -10,7 +11,7 @@ public class Features {
 	// ==================================================================================
 	
 	private static final double[] rhythmWeights = new double[] { 
-		1
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
 	private static final double[] melodyWeights = new double[] {
@@ -29,39 +30,9 @@ public class Features {
 		rhythmWeights, melodyWeights, chordsWeights, arpeggioWeights
 	};
 	
-	// ==================================================================================
-	// Stats
-	// ==================================================================================
-	
-	private static void setMelodyFeatures(double[] features, Melody.Stats s) {
-		// Note duration
-		features[0] = s.durationMean;
-		features[1] = Math.sqrt(s.durationVariation);
-		
-		// Attack distance
-		features[2] = s.attackMean;
-		features[3] = Math.sqrt(s.attackVariation);
-		
-		// Note pitch
-		features[4] = s.pitchMean;
-		features[5] = Math.sqrt(s.pitchVariation);
-		
-		// Note position
-		features[6] = s.noteMean;
-		features[7] = Math.sqrt(s.noteVariation);
-		
-		// Note function
-		features[8] = s.functionMean;
-		features[9] = Math.sqrt(s.functionVariation);
-		
-		// Note accidental
-		features[10] = s.accidentalMean;
-		features[11] = Math.sqrt(s.accidentalVariation);
-	}
-	
 	public static double[][] calculate(Composition piece) {
 		
-		Composition.Stats stats = piece.getStats();
+		Melody mergedTracks = piece.mergeTracks();
 		
 		// ==================================================================================
 		// Rhythm
@@ -69,35 +40,76 @@ public class Features {
 		
 		double[] rhythm = new double[rhythmWeights.length];
 		
-		// Notes per second
-		rhythm[0] = stats.notesPerSecond;
+		{
+			double seconds = piece.getMinutes() / 60;
+			int beats = piece.numerator * piece.length;
+			
+			Melody[] measures = new Melody[piece.length];
+			for (int m = 0; m < piece.length; m++) {
+				int start = m * piece.numerator, end = (m + 1) * piece.numerator;
+				measures[m] = mergedTracks.cut(start, end);
+			}
+			
+			// Note density
+			rhythm[0] = mergedTracks.size() / seconds;
+			
+			// Note density variation
+			for (int m = 0; m < piece.length; m++) {
+				double d = measures[m].size() * piece.length / seconds;
+				rhythm[1] += d * d;
+			}
+			rhythm[1] /= piece.length;
+			
+			// Note duration mean, maximum and minimum
+			rhythm[3] = 100;
+			for (NotePlay np : mergedTracks) {
+				rhythm[2] += np.duration;
+				rhythm[3] = Math.min(np.duration, rhythm[3]);
+				rhythm[4] = Math.max(np.duration, rhythm[4]);
+				
+			}
+			rhythm[2] /= mergedTracks.size();
+			
+			// Note duration variation
+			for (NotePlay np : mergedTracks) {
+				double d = rhythm[2] - np.duration;
+				rhythm[5] += d * d;
+			}
+			rhythm[5] /= mergedTracks.size();
+			
+			// Staccato incidence
+			double staccatoLength = 0.1 * piece.bpm / 60;
+			for (NotePlay np : mergedTracks) {
+				if (np.duration < staccatoLength)
+					rhythm[6]++;
+			}
+			rhythm[6] /= mergedTracks.size();
+			
+			// Attack mean
+			double[] attacks = mergedTracks.getAttacks();
+			for (double attack : attacks) {
+				rhythm[7] += attack;
+			}
+			rhythm[7] /= attacks.length;
+			
+			// Attack variation
+			for (double attack : attacks) {
+				double d = rhythm[7] - attack;
+				rhythm[8] += d * d;
+			}
+			rhythm[8] /= attacks.length;
+			
+			// Complete rest
+			NotePlay[] rests = mergedTracks.getRests();
+			for (NotePlay np : rests) {
+				rhythm[9] += np.duration;
+				rhythm[10] = Math.max(np.duration, rhythm[10]);
+			}
+			rhythm[9] /= beats;
+
+		}
 		
-		// ==================================================================================
-		// Melody
-		// ==================================================================================
-		
-		double[] melody = new double[melodyWeights.length];
-		setMelodyFeatures(melody, stats.melody);
-		
-		// ==================================================================================
-		// Chords
-		// ==================================================================================
-		
-		double[] chords = new double[chordsWeights.length];
-		setMelodyFeatures(chords, stats.harmony.chords);
-		
-		// ==================================================================================
-		// Arpeggio
-		// ==================================================================================
-		
-		double[] arpeggio = new double[arpeggioWeights.length];
-		setMelodyFeatures(arpeggio, stats.harmony.arpeggio);
-		
-		// Vertical notes
-		arpeggio[12] = stats.harmony.arpeggio.verticalNoteMean;
-		arpeggio[13] = Math.sqrt(stats.harmony.arpeggio.verticalNoteVariation);
-		
-		return new double[][] { rhythm, melody, chords, arpeggio };
+		return new double[][] { rhythm };
 	}
 	
 }

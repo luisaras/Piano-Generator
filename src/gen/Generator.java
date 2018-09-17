@@ -24,6 +24,7 @@ public class Generator extends RandomGenerator {
 	private Individual[] population = new Individual[populationSize];
 	
 	private Random rand = new Random(0);
+	
 	private Comparator<Individual> comparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
 			return (int) Math.signum(o1.distance - o2.distance);
@@ -105,9 +106,9 @@ public class Generator extends RandomGenerator {
 	public Composition crossover() {
 		Individual parent1 = population[rand.nextInt(tournamentSize)];
 		Individual parent2 = population[rand.nextInt(tournamentSize)];
-		int point = rand.nextInt(parent1.piece.duration - 1) + 1;
+		int point = rand.nextInt(parent1.piece.length - 1) + 1;
 		Composition first = parent1.piece.cut(0, point);
-		Composition second = parent2.piece.cut(point, parent2.piece.duration);
+		Composition second = parent2.piece.cut(point, parent2.piece.length);
 		return randomSignature(template.piece).concatenate(first).concatenate(second);
 	}
 	

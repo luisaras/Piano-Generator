@@ -31,16 +31,25 @@ public class Harmony extends ArrayList<Chord> {
 	// Debug
 	// ==================================================================================
 	
-	public ArrayList<Melody> asMelodyLines(Scale scale, int len) {
+	public ArrayList<Melody> asMelodyLines(Scale scale) {
 		ArrayList<Melody> melodies = new ArrayList<>();
 		for (int c = 0; c < size(); c++) {
 			ArrayList<Melody> chord = arpeggio.getNotes(scale, get(c));
 			for (Melody line : chord) {
-				line.displace(c * len);
+				line.displace(c * arpeggio.duration);
 				melodies.add(line);
 			}
 		}
 		return melodies;
+	}
+	
+	public Melody asMelody(Scale scale) {
+		Melody melody = new Melody(arpeggio.duration * size());
+		for (int c = 0; c < size(); c++) {
+			Melody chord = arpeggio.asMelody(scale, get(c));
+			chord.displace(c * arpeggio.duration);
+		}
+		return melody;
 	}
 	
 	public String toString() {
@@ -76,30 +85,5 @@ public class Harmony extends ArrayList<Chord> {
 			add(chord);
 		}
 	}
-	
-	// ==================================================================================
-	// Statistics
-	// ==================================================================================
-	
-	public static class Stats {
-		
-		public Melody.Stats chords;
-		public Arpeggio.Stats arpeggio;
-		
-	}
-	
-	public Stats getStats(Scale scale) {
-		Stats s = new Stats();
-		s.arpeggio = arpeggio.getStats(scale);
-		
-		Melody melody = new Melody(arpeggio.duration * size());
-		int time = 0;
-		for (Chord chord : this) {
-			melody.add(new NotePlay(chord.tonic, time++, arpeggio.duration));
-		}
-		s.chords = melody.getStats(scale);
-		
-		return s;
-	}
-	
+
 }

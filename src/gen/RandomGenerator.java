@@ -17,15 +17,6 @@ public class RandomGenerator {
 
 	private Random rand = new Random(0);
 	
-	public double randomDouble(double mean, double var) {
-		double v = (rand.nextDouble() - 0.5) * var;
-		if (v < 0) {
-			return mean - Math.sqrt(-v);
-		} else {
-			return mean + Math.sqrt(v);
-		}
-	}
-	
 	public Composition generate(Composition template) {
 		Composition composition = randomSignature(template);
 		composition.melody = randomMelody(template.melody, template.scale);
@@ -35,10 +26,10 @@ public class RandomGenerator {
 	
 	public Composition randomSignature(Composition template) {
 		Composition composition = new Composition();
-		composition.duration = template.duration;
+		composition.length = template.length;
 		composition.numerator = template.numerator;
 		composition.denominator = template.denominator;
-		composition.bpm = template.bpm + (rand.nextDouble() - 0.5) * template.bpm / 2;
+		composition.bpm = template.bpm + (rand.nextDouble() - 0.5) * template.bpm;
 		composition.scale = template.scale;
 		return composition;
 	}
@@ -59,26 +50,28 @@ public class RandomGenerator {
 	
 	public Melody randomMelody(Melody template, Scale scale) {
 		Melody notes = new Melody(template.duration);
-		
 		int noteCount = template.size();
+		int minPitch = 127;
+		int maxPitch = 0;
+		double minDuration = 100;
+		double maxDuration = 0;
+		for (NotePlay np : template) {
+			int pitch = np.note.getMIDIPitch(scale);
+			minPitch = Math.min(pitch, minPitch);
+			maxPitch = Math.max(pitch + 1, maxPitch);
+			minDuration = Math.min(np.duration, minDuration);
+			maxDuration = Math.max(np.duration + 1, maxDuration);
+		}
 		double[] attacks = randomAttacks(noteCount, template.duration);
-		
-		Melody.Stats s = template.getStats(scale);
 		for (int i = 0; i < noteCount; i++) {
-			double fd = randomDouble(s.functionMean, s.functionVariation);
-			double od = randomDouble(s.octaveMean, s.octaveVariation);
-			double ad = randomDouble(s.accidentalMean, s.accidentalVariation);
-			int func = (int) (Math.round(fd) + 7) % 7;
-			int oct = (int) Math.max(Math.round(od), 0);
-			int acc = (int) Math.round(ad);
-			Note note = new Note(func, acc, oct);
+			int pitch = rand.nextInt(maxPitch - minPitch) + minPitch;
+			Note note = scale.getPosition(pitch);
 			double end = i < noteCount - 1 ? attacks[i + 1] : template.duration;
-			double duration = randomDouble(s.durationMean, s.durationVariation);
+			double duration = rand.nextDouble() * (maxDuration - minDuration) + minDuration;
 			duration = Math.min(duration, end - attacks[i]);
 			NotePlay np = new NotePlay(note, attacks[i], duration);
 			notes.add(np);
 		}
-		
 		return notes;
 	}
 	
@@ -87,30 +80,40 @@ public class RandomGenerator {
 	// ==================================================================================
 	
 	public Harmony randomHarmony(Harmony template, Scale scale) {
-		int max = 0, min = 100;
+		int minOctave = 100, maxOctave = 0;
 		for (Chord chord : template) {
-			max = Math.max(max, chord.tonic.octaves);
-			min = Math.min(min, chord.tonic.octaves);
+			minOctave = Math.min(minOctave, chord.tonic.octaves);
+			maxOctave = Math.max(maxOctave + 1, chord.tonic.octaves);
 		}
 		Harmony harmony = new Harmony();
 		for (int i = 0; i < template.size(); i++) {
-			int oct = rand.nextInt(max + 1 - min) + min;
+			int oct = rand.nextInt(maxOctave - minOctave) + minOctave;
 			Note tonic = new Note(rand.nextInt(7), 0, oct);
 			harmony.add(new Chord(tonic));
 		}
 		Arpeggio arpeggio = new Arpeggio(template.arpeggio.duration);
-		Arpeggio.Stats s = template.arpeggio.getStats(scale);
+		int minPitch = 127, maxPitch = 0;
+		int minNoteCount = 100, maxNoteCount = 0;
+		double minDuration = 100, maxDuration = 0;
+		for (ChordPlay cp : arpeggio) {
+			for (Note note : cp) {
+				int pitch = note.getMIDIPitch(scale);
+				minPitch = Math.min(pitch, minPitch);
+				maxPitch = Math.max(pitch + 1, maxPitch);
+			}
+			minDuration = Math.min(cp.duration, minDuration);
+			maxDuration = Math.max(cp.duration + 1, maxDuration);
+		}
 		double[] attacks = randomAttacks(template.arpeggio.size(), arpeggio.duration);
 		for(int i = 0; i < attacks.length; i++) {
 			double end = i < attacks.length - 1 ? attacks[i + 1] : arpeggio.duration;
-			double duration = randomDouble(s.durationMean, s.durationVariation);
+			double duration = rand.nextDouble() * (maxDuration - minDuration) + minDuration;
 			duration = Math.min(duration, end - attacks[i]);
 			ChordPlay cp = new ChordPlay(attacks[i], duration);
-			int noteCount = (int) Math.round(randomDouble(s.verticalNoteMean - 1, s.verticalNoteVariation)) + 1;
+			int noteCount = rand.nextInt(maxNoteCount - minNoteCount) + minNoteCount;
 			for(int n = 0; n < noteCount; n++) {
-				int oct = (int) Math.round(randomDouble(s.octaveMean, s.octaveVariation));
-				int acc = (int) Math.round(randomDouble(s.accidentalMean, s.accidentalVariation));
-				cp.add(new Note(rand.nextInt(7), acc, oct));
+				int pitch = rand.nextInt(maxPitch - minPitch) + minPitch;
+				cp.add(scale.getPosition(pitch));
 			}
 			arpeggio.add(cp);
 		}
