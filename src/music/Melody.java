@@ -162,5 +162,14 @@ public class Melody extends ArrayList<NotePlay> {
 		}
 		return pitches;
 	}
+
+	public Note[] getIntervals() {
+		Note[] intervals = new Note[size() * 2 - 3];
+		for(int i = 0; i < size() - 1; i++) {
+			intervals[i * 2] = get(i).note;
+			intervals[i * 2 + 1] = get(i + 1).note;
+		}
+		return intervals;
+	}
 	
 }

@@ -31,6 +31,14 @@ public class Harmony extends ArrayList<Chord> {
 	// Debug
 	// ==================================================================================
 	
+	public String toString() {
+		String s = get(0).toString();
+		for(int i = 1; i < size(); i++) {
+			s += "-" + get(i).toString();
+		}
+		return s;
+	}
+	
 	public ArrayList<Melody> asMelodyLines(Scale scale) {
 		ArrayList<Melody> melodies = new ArrayList<>();
 		for (int c = 0; c < size(); c++) {
@@ -52,12 +60,12 @@ public class Harmony extends ArrayList<Chord> {
 		return melody;
 	}
 	
-	public String toString() {
-		String s = get(0).toString();
-		for(int i = 1; i < size(); i++) {
-			s += "-" + get(i).toString();
+	public Melody asMelody() {
+		Melody melody = new Melody(size());
+		for (int i = 0; i < size(); i++) {
+			melody.add(new NotePlay(get(i).tonic, i, 1));
 		}
-		return s;
+		return melody;
 	}
 
 	// ==================================================================================
