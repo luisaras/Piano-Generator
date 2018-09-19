@@ -30,4 +30,14 @@ public class Individual {
 		this.distance = distance;
 	}
 	
+	public void printFeatures() {
+		for(int i = 0; i < features.length; i++) {
+			if (Features.weights[i] == null)
+				continue;
+			for(int j = 0; j < features[i].length; j++) {
+				System.out.println(i + " " + j + ": " + features[i][j]);
+			}
+		}
+	}
+	
 }

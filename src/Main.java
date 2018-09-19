@@ -1,5 +1,6 @@
 import music.Composition;
 import gen.Generator;
+import gen.Individual;
 
 public class Main {
 	
@@ -8,12 +9,18 @@ public class Main {
 	public static final String outputFile = "tests/Result";
 	
 	public static void main(String[] args) {
-		testGenerator();
+		testFeatures();
     }
 	
 	public static void testConverter() {
 		Composition templatePiece = midi.Reader.read(templateFile);
 		midi.Writer.write(templateFile, templatePiece);
+	}
+	
+	public static void testFeatures() {
+		Composition templatePiece = midi.Reader.read(templateFile);
+		Individual individual = new Individual(templatePiece);
+		individual.printFeatures();
 	}
 	
 	public static void testRandomGenerator() {

@@ -16,9 +16,9 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 100;
-	public int populationSize = 20;
-	public int tournamentSize = 5;
+	public int generationCount = 1;
+	public int populationSize = 1;
+	public int tournamentSize = 1;
 	
 	private final Individual template;
 	private Individual[] population = new Individual[populationSize];

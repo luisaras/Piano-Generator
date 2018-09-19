@@ -24,7 +24,7 @@ public class Features {
 	};
 	
 	private static final double[] melodyWeights = new double[] {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
 	public static final double[][] weights = new double[][] { 
@@ -47,7 +47,7 @@ public class Features {
 		double[] melody = melodicFeatures(piece.scale, piece.melody, piece.melody.getIntervals());
 		double[] harmony = melodicFeatures(piece.scale, chords, chords.getIntervals());
 		double[] arpeggio = melodicFeatures(piece.scale, chordNotes, chordIntervals);
-		
+
 		return new double[][] { rhythm, pitch, melody, harmony, arpeggio };
 	}
 	
@@ -58,7 +58,7 @@ public class Features {
 	private static double[] rhythmFeatures(Composition piece, Melody notes) {
 		double[] features = new double[rhythmWeights.length];
 		
-		double seconds = piece.getMinutes() / 60;
+		double seconds = piece.getMinutes() * 60;
 		int beats = piece.numerator * piece.length;
 		
 		Melody[] measures = new Melody[piece.length];
@@ -72,7 +72,7 @@ public class Features {
 		
 		// Note density variation
 		for (int m = 0; m < piece.length; m++) {
-			double d = measures[m].size() * piece.length / seconds;
+			double d = measures[m].size() * piece.length / seconds - features[0];
 			features[1] += d * d;
 		}
 		features[1] /= piece.length;
@@ -83,7 +83,6 @@ public class Features {
 			features[2] += np.duration;
 			features[3] = Math.min(np.duration, features[3]);
 			features[4] = Math.max(np.duration, features[4]);
-			
 		}
 		features[2] /= notes.size();
 		
@@ -138,34 +137,30 @@ public class Features {
 		int[] classCount = notes.getPitchClasses(piece.scale);
 		
 		// Most common pitch
-		int firstPitch = 0, secondPitch = 1;
-		if (pitchCount[1] > pitchCount[0])
-			secondPitch = 0; firstPitch = 1;
+		int firstPitch = 0, secondPitch = 0;
 		for (int i = 0; i < pitchCount.length; i++) {
-			if (pitchCount[i] > pitchCount[firstPitch]) {
+			if (pitchCount[i] >= pitchCount[firstPitch]) {
 				secondPitch = firstPitch;
-				firstPitch = 0;
+				firstPitch = i;
 			}
 		}
-		features[0] = pitchCount[firstPitch] / notes.size();
+		features[0] = (firstPitch - piece.scale.root) % 12;
 		
 		// Most common pitch class
-		int firstClass = 0, secondClass = 1;
-		if (classCount[1] > classCount[0])
-			secondClass = 0; firstClass = 1;
+		int firstClass = 0, secondClass = 0;
 		for (int i = 0; i < classCount.length; i++) {
-			if (classCount[i] > classCount[firstPitch]) {
+			if (classCount[i] >= classCount[firstClass]) {
 				secondClass = firstClass;
-				firstClass = 0;
+				firstClass = i;
 			}
 		}
-		features[1] = classCount[firstClass] / notes.size();
+		features[1] = firstClass - piece.scale.root % 12;
 		
 		// Relative strength of top pitches
-		features[2] = pitchCount[secondPitch] / pitchCount[firstPitch];
+		features[2] = 1.0 * pitchCount[secondPitch] / pitchCount[firstPitch];
 		
 		// Relative strength of top pitch classes
-		features[3] = classCount[secondClass] / classCount[firstClass];
+		features[3] = 1.0 * classCount[secondClass] / classCount[firstClass];
 		
 		// Interval between top pitches
 		features[4] = Math.abs(firstPitch - secondPitch);
@@ -199,26 +194,26 @@ public class Features {
 		
 		// Primary register
 		for (NotePlay np : notes)
-			features[10] += np.note.getMIDIPitch(piece.scale);
+			features[10] += (np.note.getMIDIPitch(piece.scale) - piece.scale.root) % 12;
 		features[10] /= notes.size();
 		
 		// Importance of bass register
-		for (double count : pitchCount) {
-			if (count <= 54)
+		for(int i = 0; i <= 54; i++) {
+			if (pitchCount[i] > 0)
 				features[11]++;
 		}
 		features[11] /= notes.size();
 		
 		// Importance of middle register
-		for (double count : pitchCount) {
-			if (54 <= count && count <= 72)
+		for(int i = 55; i <= 72; i++) {
+			if (pitchCount[i] > 0)
 				features[12]++;
 		}
 		features[12] /= notes.size();
 		
 		// Importance of high register
-		for (double count : pitchCount) {
-			if (73 <= count)
+		for(int i = 73; i <= 127; i++) {
+			if (pitchCount[i] > 0)
 				features[13]++;
 		}
 		features[13] /= notes.size();
@@ -241,6 +236,7 @@ public class Features {
 		int longestIntervalSize = 0;
 		int chromatic = 0, stepwise = 0, thirds = 0, fifths = 0, 
 				tritones = 0, octaves = 0, dissonants = 0;
+		int falling = 0, rising = 0;
 		for (int i = 0; i < intervals.length; i += 2) {
 			int pitch1 = intervals[i].getMIDIPitch(scale);
 			int pitch2 = intervals[i + 1].getMIDIPitch(scale);
@@ -250,6 +246,11 @@ public class Features {
 			}
 			int currentCount = count.getOrDefault(pitch2 - pitch1, 0) + 1;
 			count.put(pitch2 - pitch1, currentCount);
+			
+			if (pitch2 > pitch1)
+				rising++;
+			else if (pitch1 > pitch2)
+				falling++;
 			
 			interval = interval % 12;
 			if (interval == 1) {
@@ -290,13 +291,13 @@ public class Features {
 		features[2] = Math.abs(firstInterval - secondInterval);
 		
 		// Most common melodic interval prevalence
-		features[3] = firstInterval / intervals.length * 2;
+		features[3] = firstInterval * 2.0 / intervals.length;
 		
 		// Relative strength of most common intervals
-		features[4] = secondInterval / intervals.length * 2 / features[3];
+		features[4] = secondInterval  * 2.0 / intervals.length / features[3];
 		
 		// Number of common melodic intervals
-		double mininum = 0.09 * intervals.length * 2;
+		double mininum = 0.09 * 2.0 * intervals.length;
 		for (Map.Entry<Integer, Integer> entry : count.entrySet()) {
 			if (entry.getValue() >= mininum) {
 				features[5]++;
@@ -304,25 +305,31 @@ public class Features {
 		}
 		
 		// Chromatic motion
-		features[6] = chromatic / intervals.length * 2;
+		features[6] = chromatic * 2.0 / intervals.length;
 		
 		// Stepwise motion
-		features[7] = stepwise / intervals.length * 2;
+		features[7] = stepwise * 2.0 / intervals.length;
 		
 		// Melodic thirds
-		features[8] = thirds / intervals.length * 2;
+		features[8] = thirds * 2.0 / intervals.length;
 		
 		// Melodic fifths
-		features[9] = fifths / intervals.length * 2;
+		features[9] = fifths * 2.0 / intervals.length;
 		
 		// Melodic tritones
-		features[10] = tritones / intervals.length * 2;
+		features[10] = tritones * 2.0 / intervals.length;
 		
 		// Melodic octaves
-		features[11] = octaves / intervals.length * 2;
+		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants / intervals.length * 2;
+		features[12] = dissonants * 2.0 / intervals.length;
+		
+		// Rising motion
+		features[13] = rising * 2.0 / intervals.length;
+		
+		// Falling motion
+		features[14] = falling * 2.0 / intervals.length;
 		
 		// ------------------------------------------------------------------------------
 		// Notes
@@ -330,30 +337,32 @@ public class Features {
 		
 		HashMap<Integer, Boolean> repeat = new HashMap<>();
 		HashMap<Integer, Integer> occurrence = new HashMap<>();
-		int repetitions = 0;
+		int repetitions = 1;
 		int length = 0;
 		for (NotePlay np : melody) {
 			int pitch = np.note.getMIDIPitch(scale);
-			if (repeat.getOrDefault(pitch, false)) {
-				features[13]++;
-			}
 			int lastOccurence = occurrence.getOrDefault(pitch, 0);
 			if (lastOccurence > 0 && length - lastOccurence <= 16) {
-				features[14] += length;
+				features[16] += length;
 				occurrence.clear();
 				repetitions++;
 				length = 0;
+				if (!repeat.getOrDefault(pitch, false)) {
+					features[15]++;
+					repeat.put(pitch, true);
+				}
 			} else {
 				length++;
 				occurrence.put(pitch, length);
 			}
 		}
+		features[16] += length;
 
 		// Repeated notes
-		features[13] /= melody.size();
+		features[15] /= melody.size();
 		
 		// Melodic pitch variety
-		features[14] /= repetitions;
+		features[16] /= repetitions;
 		
 		return features;
 	}

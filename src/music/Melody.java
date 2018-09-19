@@ -147,8 +147,9 @@ public class Melody extends ArrayList<NotePlay> {
 		int[] pitches = new int[128];
 		for(NotePlay np : this) {
 			int pitch = np.note.getMIDIPitch(scale);
-			if (pitch >= 0 && pitch <= 127)
+			if (pitch >= 0 && pitch <= 127) {
 				pitches[pitch]++;
+			}
 		}
 		return pitches;
 	}
@@ -164,7 +165,7 @@ public class Melody extends ArrayList<NotePlay> {
 	}
 
 	public Note[] getIntervals() {
-		Note[] intervals = new Note[size() * 2 - 3];
+		Note[] intervals = new Note[size() * 2 - 2];
 		for(int i = 0; i < size() - 1; i++) {
 			intervals[i * 2] = get(i).note;
 			intervals[i * 2 + 1] = get(i + 1).note;

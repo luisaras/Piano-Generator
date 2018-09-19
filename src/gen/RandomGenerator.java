@@ -95,12 +95,14 @@ public class RandomGenerator {
 		int minPitch = 127, maxPitch = 0;
 		int minNoteCount = 100, maxNoteCount = 0;
 		double minDuration = 100, maxDuration = 0;
-		for (ChordPlay cp : arpeggio) {
+		for (ChordPlay cp : template.arpeggio) {
 			for (Note note : cp) {
 				int pitch = note.getMIDIPitch(scale);
 				minPitch = Math.min(pitch, minPitch);
 				maxPitch = Math.max(pitch + 1, maxPitch);
 			}
+			minNoteCount = Math.min(cp.size(), minNoteCount);
+			maxNoteCount = Math.max(cp.size() + 1, maxNoteCount);
 			minDuration = Math.min(cp.duration, minDuration);
 			maxDuration = Math.max(cp.duration + 1, maxDuration);
 		}
