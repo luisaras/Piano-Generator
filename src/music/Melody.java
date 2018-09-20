@@ -111,6 +111,8 @@ public class Melody extends ArrayList<NotePlay> {
 	// ==================================================================================
 	
 	public double[] getAttacks() {
+		if (size() == 0)
+			return new double[0];
 		ArrayList<Double> attacks = new ArrayList<>();
 		double lastTime = get(0).time;
 		for (NotePlay np : this) {
@@ -126,6 +128,10 @@ public class Melody extends ArrayList<NotePlay> {
 	}
 	
 	public NotePlay[] getRests() {
+		if (size() == 0) {
+			NotePlay rest = new NotePlay(null, 0, duration);
+			return new NotePlay[] { rest };
+		}
 		ArrayList<NotePlay> rests = new ArrayList<>();
 		NotePlay first = get(0);
 		if (first.time > 0)
@@ -141,6 +147,14 @@ public class Melody extends ArrayList<NotePlay> {
 			restStart = noteEnd;
 		}
 		return rests.toArray(new NotePlay[rests.size()]);
+	}
+	
+	public int[] getFunctions() {
+		int[] functions = new int[7];
+		for(NotePlay np : this) {
+			functions[np.note.function]++;
+		}
+		return functions;
 	}
 	
 	public int[] getPitches(Scale scale) {
@@ -165,6 +179,8 @@ public class Melody extends ArrayList<NotePlay> {
 	}
 
 	public Note[] getIntervals() {
+		if (size() <= 1)
+			return new Note[0];
 		Note[] intervals = new Note[size() * 2 - 2];
 		for(int i = 0; i < size() - 1; i++) {
 			intervals[i * 2] = get(i).note;

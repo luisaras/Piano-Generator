@@ -24,4 +24,12 @@ public class ChordPlay extends ArrayList<Note> {
 		return cp;
 	}
 	
+	public double getEnd() {
+		return time + duration;
+	}
+	
+	public void setEnd(double end) {
+		duration = end - time;
+	}
+	
 }

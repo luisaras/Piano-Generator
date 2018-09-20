@@ -9,7 +9,7 @@ public class Main {
 	public static final String outputFile = "tests/Result";
 	
 	public static void main(String[] args) {
-		testFeatures();
+		testGenerator();
     }
 	
 	public static void testConverter() {

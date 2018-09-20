@@ -23,12 +23,17 @@ public class Features {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
-	private static final double[] melodyWeights = new double[] {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	private static final double[] intervalWeights = new double[] {
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+	};
+	
+	private static final double[] noteWeights = new double[] { 
+		1, 1, 1, 1, 1, 1, 1
 	};
 	
 	public static final double[][] weights = new double[][] { 
-		rhythmWeights, pitchWeights, melodyWeights, melodyWeights, melodyWeights
+		rhythmWeights, pitchWeights, intervalWeights, intervalWeights, intervalWeights,
+			noteWeights, noteWeights, noteWeights
 	};
 	
 	// ==================================================================================
@@ -39,16 +44,23 @@ public class Features {
 		
 		Melody mergedTracks = piece.mergeTracks();
 		Melody chords = piece.harmony.asMelody();
-		Melody chordNotes = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
+		Melody arpeggio = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
 		Note[] chordIntervals = piece.harmony.arpeggio.getIntervals(piece.scale);
 		
 		double[] rhythm = rhythmFeatures(piece, mergedTracks);
 		double[] pitch = pitchFeatures(piece, mergedTracks);
-		double[] melody = melodicFeatures(piece.scale, piece.melody, piece.melody.getIntervals());
-		double[] harmony = melodicFeatures(piece.scale, chords, chords.getIntervals());
-		double[] arpeggio = melodicFeatures(piece.scale, chordNotes, chordIntervals);
+		
+		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
+		double[] harmonyi = intervalFeatures(piece.scale, chords.getIntervals());
+		double[] arpeggioi = intervalFeatures(piece.scale, chordIntervals);
+		
+		double[] melodyn = noteFeatures(piece.scale, piece.melody);
+		double[] harmonyn = noteFeatures(piece.scale, chords);
+		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
 
-		return new double[][] { rhythm, pitch, melody, harmony, arpeggio };
+		return new double[][] { rhythm, pitch, 
+				melodyi, harmonyi, arpeggioi,
+				melodyn, harmonyn, arpeggion };
 	}
 	
 	// ==================================================================================
@@ -142,7 +154,8 @@ public class Features {
 			if (pitchCount[i] >= pitchCount[firstPitch]) {
 				secondPitch = firstPitch;
 				firstPitch = i;
-			}
+			} else if (pitchCount[i] > pitchCount[secondPitch])
+				secondPitch = i;
 		}
 		features[0] = (firstPitch - piece.scale.root) % 12;
 		
@@ -152,7 +165,8 @@ public class Features {
 			if (classCount[i] >= classCount[firstClass]) {
 				secondClass = firstClass;
 				firstClass = i;
-			}
+			} else if (classCount[i] > classCount[secondClass])
+				secondClass = i;
 		}
 		features[1] = firstClass - piece.scale.root % 12;
 		
@@ -185,12 +199,16 @@ public class Features {
 				features[8]++;
 		
 		// Range
-		int lowest = 0, highest = 127;
-		while (pitchCount[lowest] == 0)
-			lowest++;
-		while (pitchCount[highest] == 0)
-			highest--;
-		features[9] = highest - lowest;
+		if (notes.size() == 0) {
+			features[9] = 0;
+		} else {
+			int lowest = 0, highest = 127;
+			while (pitchCount[lowest] == 0)
+				lowest++;
+			while (pitchCount[highest] == 0)
+				highest--;
+			features[9] = highest - lowest;
+		}
 		
 		// Primary register
 		for (NotePlay np : notes)
@@ -222,11 +240,11 @@ public class Features {
 	}
 	
 	// ==================================================================================
-	// Melody
+	// Intervals
 	// ==================================================================================
 	
-	private static double[] melodicFeatures(Scale scale, Melody melody, Note[] intervals) {
-		double[] features = new double[melodyWeights.length];
+	private static double[] intervalFeatures(Scale scale, Note[] intervals) {
+		double[] features = new double[intervalWeights.length];
 		
 		// ------------------------------------------------------------------------------
 		// Intervals
@@ -280,11 +298,12 @@ public class Features {
 		int firstInterval = 0;
 		int secondInterval = 0;
 		for (Map.Entry<Integer, Integer> entry : count.entrySet()) {
-			if (entry.getValue() > firstInterval) {
+			if (entry.getValue() >= firstInterval) {
 				secondInterval = firstInterval;
 				firstInterval = entry.getValue();
 				features[1] = entry.getKey();
-			}
+			} else if (entry.getValue() > secondInterval)
+				secondInterval = entry.getValue();
 		}
 		
 		// Distance between most common melodic intervals
@@ -331,9 +350,15 @@ public class Features {
 		// Falling motion
 		features[14] = falling * 2.0 / intervals.length;
 		
-		// ------------------------------------------------------------------------------
-		// Notes
-		// ------------------------------------------------------------------------------
+		return features;
+	}
+	
+	// ==================================================================================
+	// Note
+	// ==================================================================================
+	
+	private static double[] noteFeatures(Scale scale, Melody melody) {
+		double[] features = new double[noteWeights.length];
 		
 		HashMap<Integer, Boolean> repeat = new HashMap<>();
 		HashMap<Integer, Integer> occurrence = new HashMap<>();
@@ -343,12 +368,12 @@ public class Features {
 			int pitch = np.note.getMIDIPitch(scale);
 			int lastOccurence = occurrence.getOrDefault(pitch, 0);
 			if (lastOccurence > 0 && length - lastOccurence <= 16) {
-				features[16] += length;
+				features[1] += length;
 				occurrence.clear();
 				repetitions++;
 				length = 0;
 				if (!repeat.getOrDefault(pitch, false)) {
-					features[15]++;
+					features[0]++;
 					repeat.put(pitch, true);
 				}
 			} else {
@@ -356,13 +381,50 @@ public class Features {
 				occurrence.put(pitch, length);
 			}
 		}
-		features[16] += length;
 
 		// Repeated notes
-		features[15] /= melody.size();
+		features[0] /= melody.size();
 		
 		// Melodic pitch variety
-		features[16] /= repetitions;
+		features[1] = (features[1] + length) / repetitions;
+		
+		int[] functionCount = melody.getFunctions();
+		int firstFunction = 0, secondFunction = 0;
+		for (int i = 1; i < 7; i++) {
+			if (functionCount[i] >= functionCount[firstFunction]) {
+				secondFunction = firstFunction;
+				firstFunction = i;
+			} else if (functionCount[i] > functionCount[secondFunction])
+				secondFunction = i;
+		}
+		
+		// Most common function
+		features[2] = firstFunction;
+		
+		// Most common function prevalence
+		if (melody.size() == 0)
+			features[3] = 0;
+		else 
+			features[3] = functionCount[firstFunction] / melody.size();
+		
+		// Relative strength between top functions
+		if (melody.size() == 0)
+			features[4] = 0;
+		else 
+			features[4] = functionCount[secondFunction] / functionCount[firstFunction];
+		
+		// Average octave
+		for (NotePlay np : melody) {
+			features[5] += np.note.octaves;
+		}
+		features[5] /= melody.size();
+		
+		// Accidental incidence
+		for (NotePlay np : melody) {
+			if (np.note.accidental != 0)
+				features[6]++;
+		}
+		features[6] /= melody.size();
 		
 		return features;
 	}

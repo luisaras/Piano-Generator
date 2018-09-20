@@ -16,14 +16,14 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 1;
-	public int populationSize = 1;
-	public int tournamentSize = 1;
+	public int generationCount = 400;
+	public int populationSize = 20;
+	public int tournamentSize = 5;
 	
 	private final Individual template;
 	private Individual[] population = new Individual[populationSize];
 	
-	private Random rand = new Random(0);
+	private Random rand = new Random(1);
 	
 	private Comparator<Individual> comparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
@@ -41,8 +41,8 @@ public class Generator extends RandomGenerator {
 	
 	public void initializePopulation(Composition initialPiece) {
 		for (int i = 0; i < population.length; i++) {
-			Composition piece = initialPiece.clone();
 			do {
+				Composition piece = initialPiece.clone();
 				mutate(piece);
 				population[i] = new Individual(piece, template);
 			} while (Double.isNaN(population[i].distance));
@@ -89,6 +89,7 @@ public class Generator extends RandomGenerator {
 			nextGeneration();
 		}
 		save();
+		population[0].printDifferences(template);
 		return population[0].piece;
 	}
 	
@@ -217,17 +218,19 @@ public class Generator extends RandomGenerator {
 			next++;
 			// Change pitch
 			mutateNote(np.note, scale);
-			// Change duration
+			// Change start
 			double end = next < melody.size() ? melody.get(next).time : melody.duration;
+			if (rand.nextDouble() < attackMutation) {
+				double start = next == 1 ? 0 : melody.get(next - 2).getEnd();
+				double t = rand.nextDouble() * (end - start) + np.time;
+				np.time = Math.floor(t * 16) / 16;
+			}
+			// Change duration
 			if (rand.nextDouble() < durationMutation) {
 				double d = rand.nextDouble() * (end - np.time - 1 / 64); 
-				np.duration = Math.floor(d * 64 + 1) / 64;
+				np.duration = Math.floor(d * 16 + 1) / 16;
 			}
-			// Change start
-			if (rand.nextDouble() < attackMutation) {
-				double t = rand.nextDouble() * (end - np.time) + np.time;
-				np.time = Math.floor(t * 64) / 64;
-			}
+			np.setEnd(Math.min(np.getEnd(), end));
 		}
 	}
 	
@@ -235,7 +238,7 @@ public class Generator extends RandomGenerator {
 	// Mutation - Harmony
 	// ==================================================================================
 	
-	public float arpeggioMutation = 0f;
+	public float arpeggioMutation = 0.5f;
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
 		// Tonic
@@ -276,15 +279,17 @@ public class Generator extends RandomGenerator {
 			}
 			// Change duration
 			double end = next < arpeggio.size() ? arpeggio.get(next).time : arpeggio.duration;
+			if (rand.nextDouble() < attackMutation) {
+				double start = next == 1 ? 0 : arpeggio.get(next - 2).getEnd();
+				double t = rand.nextDouble() * (end - start) + cp.time;
+				cp.time = Math.floor(t * 16) / 16;
+			}
+			// Change duration
 			if (rand.nextDouble() < durationMutation) {
 				double d = rand.nextDouble() * (end - cp.time - 1 / 64); 
-				cp.duration = Math.floor(d * 64 + 1) / 64;
+				cp.duration = Math.floor(d * 16 + 1) / 16;
 			}
-			// Change start
-			if (rand.nextDouble() < attackMutation) {
-				double t = rand.nextDouble() * (end - cp.time) + cp.time;
-				cp.time = Math.floor(t * 64) / 64;
-			}
+			cp.setEnd(Math.min(cp.getEnd(), end));
 		}
 	}
 

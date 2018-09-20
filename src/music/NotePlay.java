@@ -16,6 +16,14 @@ public class NotePlay {
 		return new NotePlay(note.clone(), time, duration);
 	}
 	
+	public double getEnd() {
+		return time + duration;
+	}
+	
+	public void setEnd(double end) {
+		duration = end - time;
+	}
+	
 	public String toString() {
 		return note.toString() + "(" + time + ")";
 	}
