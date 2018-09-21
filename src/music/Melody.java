@@ -68,7 +68,7 @@ public class Melody extends ArrayList<NotePlay> {
 	public Melody cut(double start, double end) {
 		Melody subMelody = new Melody(end - start);
 		for(NotePlay note : this) {
-			if (note.time >= start - 0.1) {
+			if (note.time >= start) {
 				if (note.time >= end) {
 					break;
 				}

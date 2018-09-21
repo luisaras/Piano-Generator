@@ -17,11 +17,15 @@ import jm.util.Write;
 public class Writer {
 
 	public static void write(String fileName, Composition composition) {
+		int sig = Scale.getSignature(composition.scale.root, composition.scale.mode);
 		Score score = new Score();
 		score.setTempo(composition.bpm);
-		score.setKeySignature(composition.scale.signature);
-		score.setKeyQuality(composition.scale.mode == 0 ? 0 : 1);
+		score.setKeySignature(composition.scale.mode);
+		score.setKeyQuality(sig);
 		score.setTimeSignature(composition.numerator, composition.denominator);
+		
+		System.out.println(composition.scale);
+		System.out.println(composition.harmony);
 		
 		{ // Melody part
 			Part part = new Part("Melody", 0, 0);
@@ -33,7 +37,6 @@ public class Writer {
 			Part part = new Part("Harmony", 0, 1);
 			part.addPhraseList(toPhraseList(composition.harmony, composition));
 			score.addPart(part);
-			System.out.println(composition.harmony);
 		}
 
 		Write.midi(score, fileName + ".mid");

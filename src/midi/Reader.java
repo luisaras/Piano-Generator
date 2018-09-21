@@ -29,7 +29,7 @@ public class Reader {
 		int mode = score.getKeyQuality() == 0 ? 0 : 5;
 		int root = Scale.getRoot(sig, mode);
 		
-		composition.scale = new Scale(root, mode, sig);
+		composition.scale = new Scale(root, mode);
 		composition.length = (int) score.getEndTime() / composition.numerator;
 
 		{ // Melody notes

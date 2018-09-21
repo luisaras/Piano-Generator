@@ -18,6 +18,16 @@ public class Composition {
 		return cut(0, length);
 	}
 	
+	public Composition cloneSignature() {
+		Composition composition = new Composition();
+		composition.length = length;
+		composition.numerator = numerator;
+		composition.denominator = denominator;
+		composition.bpm = bpm;
+		composition.scale = scale;
+		return composition;
+	}
+	
 	// ==================================================================================
 	// Cross-over
 	// ==================================================================================
@@ -28,12 +38,7 @@ public class Composition {
 	 * @return A sub-piece (deep copy).
 	 */
 	public Composition cut(int start, int end) {
-		Composition composition = new Composition();
-		composition.length = length;
-		composition.numerator = numerator;
-		composition.denominator = denominator;
-		composition.bpm = bpm;
-		composition.scale = scale;
+		Composition composition = cloneSignature();
 		composition.melody = melody.cut(start * numerator, end * numerator);
 		composition.harmony = harmony.cut(start, end);
 		return composition;
@@ -60,6 +65,10 @@ public class Composition {
 	
 	public double getMinutes() {
 		return length * denominator / bpm;
+	}
+
+	public double getBeats() {
+		return length * numerator;
 	}
 	
 }

@@ -4,8 +4,8 @@ import gen.Individual;
 
 public class Main {
 	
-	public static final String templateFile = "Calm";
-	public static final String baseFile = null;//"Sad";
+	public static final String templateFile = "Sad1";
+	public static final String baseFile = "Happy1";
 	public static final String outputFile = "tests/Result";
 	
 	public static void main(String[] args) {
@@ -52,8 +52,7 @@ public class Main {
 		} else {
 			generator.initializePopulation();
 		}
-		Composition outputPiece = generator.generate();
-		midi.Writer.write(outputFile, outputPiece);
+		generator.generate();
 	}
 
 }

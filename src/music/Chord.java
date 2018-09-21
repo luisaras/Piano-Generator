@@ -65,12 +65,11 @@ public class Chord {
 	public Scale tonicScale(Scale pieceScale) {
 		int root = tonic.getMIDIPitch(pieceScale);
 		int mode = (pieceScale.mode + tonic.function) % 7;
-		int sig = Scale.getSignature(root, mode);
-		return new Scale(root, mode, sig);
+		return new Scale(root, mode);
 	}
 
 	public String toString() {
-		return chordNames[tonic.function] + (tonic.octaves);
+		return chordNames[tonic.function] + tonic.octaves;
 	}
 	
 }

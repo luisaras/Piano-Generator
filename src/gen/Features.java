@@ -16,7 +16,7 @@ public class Features {
 	// ==================================================================================
 	
 	private static final double[] rhythmWeights = new double[] { 
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 	};
 	
 	private static final double[] pitchWeights = new double[] { 
@@ -32,7 +32,8 @@ public class Features {
 	};
 	
 	public static final double[][] weights = new double[][] { 
-		rhythmWeights, pitchWeights, intervalWeights, intervalWeights, intervalWeights,
+		rhythmWeights, rhythmWeights, pitchWeights, 
+			intervalWeights, intervalWeights, intervalWeights,
 			noteWeights, noteWeights, noteWeights
 	};
 	
@@ -47,7 +48,8 @@ public class Features {
 		Melody arpeggio = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
 		Note[] chordIntervals = piece.harmony.arpeggio.getIntervals(piece.scale);
 		
-		double[] rhythm = rhythmFeatures(piece, mergedTracks);
+		double[] melodyr = rhythmFeatures(piece, piece.melody);
+		double[] arpeggior = rhythmFeatures(piece, arpeggio);
 		double[] pitch = pitchFeatures(piece, mergedTracks);
 		
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
@@ -58,7 +60,7 @@ public class Features {
 		double[] harmonyn = noteFeatures(piece.scale, chords);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
 
-		return new double[][] { rhythm, pitch, 
+		return new double[][] { melodyr, arpeggior, pitch, 
 				melodyi, harmonyi, arpeggioi,
 				melodyn, harmonyn, arpeggion };
 	}
@@ -70,8 +72,7 @@ public class Features {
 	private static double[] rhythmFeatures(Composition piece, Melody notes) {
 		double[] features = new double[rhythmWeights.length];
 		
-		double seconds = piece.getMinutes() * 60;
-		int beats = piece.numerator * piece.length;
+		double seconds = notes.duration / piece.bpm * 60;
 		
 		Melody[] measures = new Melody[piece.length];
 		for (int m = 0; m < piece.length; m++) {
@@ -82,58 +83,51 @@ public class Features {
 		// Note density
 		features[0] = notes.size() / seconds;
 		
-		// Note density variation
-		for (int m = 0; m < piece.length; m++) {
-			double d = measures[m].size() * piece.length / seconds - features[0];
-			features[1] += d * d;
-		}
-		features[1] /= piece.length;
-		
 		// Note duration mean, maximum and minimum
-		features[3] = 100;
+		features[2] = 100;
 		for (NotePlay np : notes) {
-			features[2] += np.duration;
-			features[3] = Math.min(np.duration, features[3]);
-			features[4] = Math.max(np.duration, features[4]);
+			features[1] += np.duration;
+			features[2] = Math.min(np.duration, features[3]);
+			features[3] = Math.max(np.duration, features[4]);
 		}
-		features[2] /= notes.size();
+		features[1] /= notes.size();
 		
 		// Note duration variation
 		for (NotePlay np : notes) {
-			double d = features[2] - np.duration;
-			features[5] += d * d;
+			double d = features[1] - np.duration;
+			features[4] += d * d;
 		}
-		features[5] /= notes.size();
+		features[4] /= notes.size();
 		
 		// Staccato incidence
 		double staccatoLength = 0.1 * piece.bpm / 60;
 		for (NotePlay np : notes) {
 			if (np.duration < staccatoLength)
-				features[6]++;
+				features[5]++;
 		}
-		features[6] /= notes.size();
+		features[5] /= notes.size();
 		
 		// Attack mean
 		double[] attacks = notes.getAttacks();
 		for (double attack : attacks) {
-			features[7] += attack;
+			features[6] += attack;
 		}
-		features[7] /= attacks.length;
+		features[6] /= attacks.length;
 		
 		// Attack variation
 		for (double attack : attacks) {
-			double d = features[7] - attack;
-			features[8] += d * d;
+			double d = features[6] - attack;
+			features[7] += d * d;
 		}
-		features[8] /= attacks.length;
+		features[7] /= attacks.length;
 		
 		// Complete rest
 		NotePlay[] rests = notes.getRests();
 		for (NotePlay np : rests) {
-			features[9] += np.duration;
-			features[10] = Math.max(np.duration, features[10]);
+			features[8] += np.duration;
+			features[9] = Math.max(np.duration, features[9]);
 		}
-		features[9] /= beats;
+		features[8] /= notes.duration;
 
 		return features;
 	}
@@ -176,11 +170,11 @@ public class Features {
 		// Relative strength of top pitch classes
 		features[3] = 1.0 * classCount[secondClass] / classCount[firstClass];
 		
-		// Interval between top pitches
-		features[4] = Math.abs(firstPitch - secondPitch);
+		// Difference between top pitches
+		features[4] = Math.abs(pitchCount[firstPitch] - pitchCount[secondPitch]);
 		
-		// Interval between top pitch classes
-		features[5] = Math.abs(firstClass - secondClass);
+		// Difference between top pitch classes
+		features[5] = Math.abs(classCount[firstClass] - classCount[secondClass]);
 		
 		// Number of common pitches
 		double minimum = notes.size() * 0.09;

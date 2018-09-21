@@ -41,8 +41,8 @@ public class RandomGenerator {
 	protected double[] randomAttacks(int size, double duration) {
 		double[] attacks = new double[size];
 		for (int i = 0; i < size; i++) {
-			double t = rand.nextDouble() * duration;
-			attacks[i] = Math.floor(t * 64) / 64;
+			double t = rand.nextDouble() * (duration - 1 / NotePlay.minSize);
+			attacks[i] = Math.floor(t * NotePlay.minSize + 1) / NotePlay.minSize;
 		}
 		Arrays.sort(attacks);
 		return attacks;

@@ -26,13 +26,10 @@ public class Scale {
 	};
 	
 	// Greek mode from 0 to 6.
-	public final int mode;
+	public int mode;
 	
 	// Root MIDI pitch.
-	public final int root;
-	
-	// Number or sharps or flats.
-	public final int signature;
+	public int root;
 	
 	// True element i means that pitch class i (from 0 to 11) is on this scale.
 	public final boolean[] contains = new boolean[12];
@@ -55,14 +52,15 @@ public class Scale {
 	 * @param mode Mode from 0 (major) to 6 (Locrian).
 	 * @param sig Scale's signature (number of sharps or flats).
 	 */
-	public Scale(int root, int mode, int sig) {
+	public Scale(int root, int mode) {
 		this.root = root;
 		this.mode = mode;
-		this.signature = sig;
 		
 		for (int i = 0; i < 12; i++)
 			this.contains[i] = false;
 		
+		if (root < 0)
+			root = 12 - (-root) % 12;
 		int step = 0;
 		for(int i = 0; i < 7; i++) {
 			// Mode offset from the root note
@@ -87,7 +85,19 @@ public class Scale {
 	 * @see java.lang.Object#clone()
 	 */
 	public Scale clone() {
-		return new Scale(root, mode, signature);
+		return new Scale(root, mode);
+	}
+	
+	public void setRoot(int root) {
+		this.root = root;
+		if (root < 0)
+			root = 12 - (-root) % 12;
+		int step = 0;
+		for(int i = 0; i < 7; i++) {
+			int pitch = (step + root) % 12;
+			contains[pitch] = true;
+			step += C_MAJOR_STEPS[(mode + i) % 7];
+		}
 	}
 	
 	// ==================================================================================
@@ -140,7 +150,10 @@ public class Scale {
 	}
 	
 	public int getPitchValue(int pos) {
-		return (root % 12 + pos) % 7;
+		int root = this.root % 12;
+		if (root < 0)
+			root = 12 - (-root) % 12;
+		return (root + pos) % 7;
 	}
 	
 	/** Finds the note position of a given MIDI pitch.
@@ -149,6 +162,8 @@ public class Scale {
 	 */
 	public Note getPosition(int pitch) {
 		int root = this.root % 12;
+		if (root < 0)
+			root = 12 - (-root) % 12;
 		int octaves = pitch / 12 - this.root / 12;
 		pitch = pitch % 12;
 		if (pitch < root) {
