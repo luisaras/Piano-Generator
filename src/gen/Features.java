@@ -31,12 +31,6 @@ public class Features {
 		1, 1, 1, 1, 1, 1, 1
 	};
 	
-	public static final double[][] weights = new double[][] { 
-		rhythmWeights, rhythmWeights, pitchWeights, 
-			intervalWeights, intervalWeights, intervalWeights,
-			noteWeights, noteWeights, noteWeights
-	};
-	
 	// ==================================================================================
 	// Features
 	// ==================================================================================
@@ -46,23 +40,22 @@ public class Features {
 		Melody mergedTracks = piece.mergeTracks();
 		Melody chords = piece.harmony.asMelody();
 		Melody arpeggio = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
-		Note[] chordIntervals = piece.harmony.arpeggio.getIntervals(piece.scale);
 		
 		double[] melodyr = rhythmFeatures(piece, piece.melody);
 		double[] arpeggior = rhythmFeatures(piece, arpeggio);
 		double[] pitch = pitchFeatures(piece, mergedTracks);
 		
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		double[] harmonyi = intervalFeatures(piece.scale, chords.getIntervals());
-		double[] arpeggioi = intervalFeatures(piece.scale, chordIntervals);
+		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
+		double[] arpeggioi = arpeggioFeatures(piece);
 		
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
-		double[] harmonyn = noteFeatures(piece.scale, chords);
+		double[] chordsn = noteFeatures(piece.scale, chords);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
 
-		return new double[][] { melodyr, arpeggior, pitch, 
-				melodyi, harmonyi, arpeggioi,
-				melodyn, harmonyn, arpeggion };
+		return new double[][] { melodyr, pitch,
+				melodyi, chordsi, arpeggioi,
+				melodyn, chordsn, arpeggion };
 	}
 	
 	// ==================================================================================
@@ -81,7 +74,7 @@ public class Features {
 		}
 		
 		// Note density
-		features[0] = notes.size() / seconds;
+		features[0] = notes.size() / seconds * 10;
 		
 		// Note duration mean, maximum and minimum
 		features[2] = 100;
@@ -204,30 +197,24 @@ public class Features {
 			features[9] = highest - lowest;
 		}
 		
-		// Primary register
-		for (NotePlay np : notes)
-			features[10] += (np.note.getMIDIPitch(piece.scale) - piece.scale.root) % 12;
+		for (NotePlay np : notes) {
+			int pitch = np.note.getMIDIPitch(piece.scale);
+			features[10] += pitch;
+			features[11] += pitch % 12;
+			features[12] += (pitch / 12) * 12;
+			features[13] += pitch - piece.scale.root;
+		}
+		
+		// Average pitch
 		features[10] /= notes.size();
 		
-		// Importance of bass register
-		for(int i = 0; i <= 54; i++) {
-			if (pitchCount[i] > 0)
-				features[11]++;
-		}
+		// Average pitch class
 		features[11] /= notes.size();
 		
-		// Importance of middle register
-		for(int i = 55; i <= 72; i++) {
-			if (pitchCount[i] > 0)
-				features[12]++;
-		}
+		// Average pitch octave
 		features[12] /= notes.size();
 		
-		// Importance of high register
-		for(int i = 73; i <= 127; i++) {
-			if (pitchCount[i] > 0)
-				features[13]++;
-		}
+		// Average pitch position relative to scale
 		features[13] /= notes.size();
 		
 		return features;
@@ -239,10 +226,6 @@ public class Features {
 	
 	private static double[] intervalFeatures(Scale scale, Note[] intervals) {
 		double[] features = new double[intervalWeights.length];
-		
-		// ------------------------------------------------------------------------------
-		// Intervals
-		// ------------------------------------------------------------------------------
 		
 		HashMap<Integer, Integer> count = new HashMap<>();
 		int longestIntervalSize = 0;
@@ -419,6 +402,23 @@ public class Features {
 				features[6]++;
 		}
 		features[6] /= melody.size();
+		
+		return features;
+	}
+	
+	// ==================================================================================
+	// Arpeggio
+	// ==================================================================================
+
+	private static double[] arpeggioFeatures(Composition piece) {
+		double[] features = new double[intervalWeights.length];
+		
+		for (int m = 0; m < piece.length; m++) {
+			Note[] measureIntervals = piece.getMeasureIntervals(m);
+			double[] measureFeatures = intervalFeatures(piece.scale, measureIntervals);
+			for (int i = 0; i < features.length; i++)
+				features[i] += measureFeatures[i] / piece.length;
+		}
 		
 		return features;
 	}

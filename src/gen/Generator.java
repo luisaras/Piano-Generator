@@ -2,7 +2,6 @@ package gen;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Random;
 
 import music.Arpeggio;
 import music.Chord;
@@ -16,14 +15,12 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 0;
+	public int generationCount = 200;
 	public int populationSize = 20;
-	public int tournamentSize = 5;
+	public int tournamentSize = 10;
 	
-	private final Individual template;
+	public final Individual template;
 	private Individual[] population = new Individual[populationSize];
-	
-	private Random rand = new Random(0);
 	
 	private Comparator<Individual> comparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
@@ -65,39 +62,21 @@ public class Generator extends RandomGenerator {
 	}
 	
 	// ==================================================================================
-	// Debug
-	// ==================================================================================
-	
-	public void print(Individual i) {
-		System.out.println(i.piece.scale);
-		System.out.println(i.piece.harmony);
-	}
-	
-	public void save() {
-		for (int i = 0; i < population.length; i++) {
-			midi.Writer.write("tests/" + template.piece.name + " " + i + 
-					" (" + population[i].distance + ")", population[i].piece);
-		}
-	}
-	
-	// ==================================================================================
 	// Generation
 	// ==================================================================================
 	
-	public Composition getFittest() {
-		return population[0].piece;
+	public Individual getFittest() {
+		return population[0];
+	}
+	
+	public Individual getWorst() {
+		return population[populationSize - 1];
 	}
 	
 	public Composition generate() {
 		for (int i = 0; i < generationCount; i++) {
 			nextGeneration();
 		}
-		save();
-		System.out.println("BEST:");
-		population[0].printDifferences(template);
-		System.out.println("WORST:");
-		population[populationSize - 1].printDifferences(template);
-		System.out.println();
 		return population[0].piece;
 	}
 	
@@ -116,13 +95,12 @@ public class Generator extends RandomGenerator {
 	public Composition crossover() {
 		Individual parent1 = population[rand.nextInt(tournamentSize)];
 		Individual parent2 = population[rand.nextInt(tournamentSize)];
-		Individual parent3 = population[rand.nextInt(tournamentSize)];
-		int point = rand.nextInt(parent1.piece.length - 1) + 1;
-		Composition first = parent1.piece.cut(0, point);
-		Composition second = parent2.piece.cut(point, parent2.piece.length);
-		if (second.melody.size() == 0)
-			System.err.println("aaaaaaaaa " + point);
-		return parent3.piece.cloneSignature().concatenate(parent1.piece);
+		return parent1.piece.cloneSignature().concatenate(parent2.piece);
+		//Individual parent3 = population[rand.nextInt(tournamentSize)];
+		//int point = rand.nextInt(parent1.piece.length - 1) + 1;
+		//Composition first = parent1.piece.cut(0, point);
+		//Composition second = parent2.piece.cut(point, parent2.piece.length);
+		//return parent3.piece.cloneSignature().concatenate(first).concatenate(second);
 	}
 	
 	// ==================================================================================
@@ -149,7 +127,7 @@ public class Generator extends RandomGenerator {
 	// Mutation - Signature
 	// ==================================================================================
 	
-	public float tempoMutation = 0.1f;
+	public float tempoMutation = 0.5f;
 	public float modeMutation = 0.5f;
 	public float rootMutation = 0.1f;
 	

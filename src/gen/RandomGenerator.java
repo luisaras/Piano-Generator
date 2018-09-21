@@ -15,7 +15,7 @@ import music.Scale;
 
 public class RandomGenerator {
 
-	private Random rand = new Random(0);
+	protected Random rand = new Random(0);
 	
 	public Composition generate(Composition template) {
 		Composition composition = randomSignature(template);

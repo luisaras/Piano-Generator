@@ -1,5 +1,7 @@
 package music;
 
+import java.util.ArrayList;
+
 public class Composition {
 	
 	public String name;
@@ -61,6 +63,23 @@ public class Composition {
 		tracks.addAll(melody);
 		tracks.sort();
 		return tracks;
+	}
+	
+	public Note[] getMeasureIntervals(int t) {
+		ArrayList<Note> intervals = new ArrayList<>();
+		Melody mel = melody.cut(t * numerator, (t + 1) * numerator);
+		Melody arp = harmony.arpeggio.asMelody(scale, harmony.get(t));
+		for (int i = 0; i < arp.size(); i++) {
+			for (NotePlay np : mel) {
+				intervals.add(arp.get(i).note);
+				intervals.add(np.note);
+			}
+			for (int j = i + 1; j < arp.size(); j++) {
+				intervals.add(arp.get(i).note);
+				intervals.add(arp.get(j).note);
+			}
+		}
+		return intervals.toArray(new Note[intervals.size()]);
 	}
 	
 	public double getMinutes() {

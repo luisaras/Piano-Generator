@@ -84,15 +84,5 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 		tonicScale.convert(melody, pieceScale);
 		return melody;
 	}
-
-	public Note[] getIntervals(Scale scale) {
-		Note[] intervals = new Note[size() * 2];
-		for (int i = 0; i < size(); i++) {
-			ChordPlay cp = get(i);
-			intervals[i * 2] = cp.get(0);
-			intervals[i * 2 + 1] = cp.get(cp.size() - 1);
-		}
-		return intervals;
-	}
 	
 }

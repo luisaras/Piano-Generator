@@ -67,6 +67,20 @@ public class Harmony extends ArrayList<Chord> {
 		}
 		return melody;
 	}
+	
+	public Note[] getIntervals(Scale scale) {
+		ArrayList<Note> intervals = new ArrayList<>();
+		for (Chord chord : this) {
+			Melody arp = arpeggio.asMelody(scale, chord);
+			for (int i = 0; i < arp.size(); i++) {
+				for (int j = i + 1; j < arp.size(); j++) {
+					intervals.add(arp.get(i).note);
+					intervals.add(arp.get(j).note);
+				}
+			}
+		}
+		return intervals.toArray(new Note[intervals.size()]);
+	}
 
 	// ==================================================================================
 	// Cross-over
