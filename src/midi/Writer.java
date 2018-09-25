@@ -29,16 +29,17 @@ public class Writer {
 		
 		{ // Melody part
 			Part part = new Part("Melody", 0, 0);
-			part.addPhrase(toPhrase(composition.melody, composition.scale));
+			part.setDynamic(100);
+			part.addPhrase(toPhrase(composition.melody, composition.scale, 100));
 			score.addPart(part);
 		}
 		
 		{ // Harmony part
 			Part part = new Part("Harmony", 0, 1);
+			part.setDynamic(100);
 			part.addPhraseList(toPhraseList(composition.harmony, composition));
 			score.addPart(part);
 		}
-
 		Write.midi(score, fileName + ".mid");
 	}
 	
@@ -46,7 +47,7 @@ public class Writer {
 	// Melody Conversion
 	// ==================================================================================
 	
-	private static Phrase toPhrase(Melody melody, Scale scale) {
+	private static Phrase toPhrase(Melody melody, Scale scale, int volume) {
 		Phrase phrase = new Phrase(0);
 		double lastTime = 0;
 		for (NotePlay np : melody) {
@@ -55,6 +56,7 @@ public class Writer {
 			}
 			Note note = new Note(np.note.getMIDIPitch(scale), np.duration);
 			note.setDuration(np.duration - 0.0001);
+			note.setDynamic(volume);
 			phrase.add(note);
 			lastTime = np.time + np.duration;
 		}
@@ -69,7 +71,7 @@ public class Writer {
 		ArrayList<Phrase> phrases = new ArrayList<>();
 		ArrayList<Melody> lines = harmony.asMelodyLines(composition.scale);
 		for (Melody melody : lines) {
-			Phrase phrase = toPhrase(melody, composition.scale);
+			Phrase phrase = toPhrase(melody, composition.scale, 75);
 			phrase.setAppend(false);
 			phrases.add(phrase);
 		}

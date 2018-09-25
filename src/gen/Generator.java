@@ -37,16 +37,24 @@ public class Generator extends RandomGenerator {
 	}
 	
 	public void initializePopulation(Composition initialPiece) {
+		System.out.println("Initializing: " + initialPiece.name);
 		for (int i = 0; i < population.length; i++) {
+			int it = 0;
 			do {
+				if (it >= 20) {
+					population[i].printFeatures();
+					System.exit(0);
+				}
 				Composition piece = initialPiece.clone();
 				mutate(piece);
 				piece.melody.sort();
 				population[i] = new Individual(piece, template);
+				it++;
 			} while (Double.isNaN(population[i].distance));
 			population[i].piece.melody.sort();
 		}
 		Arrays.sort(population, comparator);
+		System.out.println("Initialized " + initialPiece.name);
 	}
 	
 	public void initializePopulation() {
@@ -93,14 +101,13 @@ public class Generator extends RandomGenerator {
 	}
 	
 	public Composition crossover() {
-		Individual parent1 = population[rand.nextInt(tournamentSize)];
-		Individual parent2 = population[rand.nextInt(tournamentSize)];
-		return parent1.piece.cloneSignature().concatenate(parent2.piece);
-		//Individual parent3 = population[rand.nextInt(tournamentSize)];
-		//int point = rand.nextInt(parent1.piece.length - 1) + 1;
-		//Composition first = parent1.piece.cut(0, point);
-		//Composition second = parent2.piece.cut(point, parent2.piece.length);
-		//return parent3.piece.cloneSignature().concatenate(first).concatenate(second);
+		Individual signature = population[rand.nextInt(tournamentSize)];
+		Individual melody = population[rand.nextInt(tournamentSize)];
+		Individual harmony = population[rand.nextInt(tournamentSize)];
+		Composition child = signature.piece.cloneSignature();
+		child.melody = melody.piece.melody.clone();
+		child.harmony = harmony.piece.harmony.clone();
+		return child;
 	}
 	
 	// ==================================================================================
@@ -129,7 +136,7 @@ public class Generator extends RandomGenerator {
 	
 	public float tempoMutation = 0.5f;
 	public float modeMutation = 0.5f;
-	public float rootMutation = 0.1f;
+	public float rootMutation = 0f;
 	
 	public void mutateSignature(Composition piece) {
 		if (rand.nextDouble() < modeMutation) {

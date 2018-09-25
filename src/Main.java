@@ -45,7 +45,7 @@ public class Main {
 	// ==================================================================================
 	
 	public static void testGenerator() {
-		for (int i = 1; i <= 1; i++) {
+		for (int i = 1; i <= 3; i++) {
 			//Generator gen1 = getGenerator("Sad" + i, "Happy" + i);
 			//saveResults(gen1, "Sad to Happy" + i + "/");
 			Generator gen2 = getGenerator("Happy" + i, "Sad" + i);
