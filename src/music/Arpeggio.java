@@ -73,6 +73,14 @@ public class Arpeggio extends ArrayList<ChordPlay> {
 		return melodies;
 	}
 	
+	public Melody getPlays() {
+		Melody melody = new Melody(duration);
+		for (ChordPlay cp : this) {
+			melody.add(new NotePlay(null, cp.time, cp.duration));
+		}
+		return melody;
+	}
+	
 	public Melody asMelody(Scale pieceScale, Chord chord) {
 		Melody melody = new Melody(duration);
 		for (ChordPlay cp : this) {

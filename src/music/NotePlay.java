@@ -2,7 +2,7 @@ package music;
 
 public class NotePlay {
 	
-	public static final float minSize = 16;
+	public static final float minSize = 4;
 	
 	public Note note = null;
 	public double time;

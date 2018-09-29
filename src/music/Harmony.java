@@ -56,6 +56,7 @@ public class Harmony extends ArrayList<Chord> {
 		for (int c = 0; c < size(); c++) {
 			Melody chord = arpeggio.asMelody(scale, get(c));
 			chord.displace(c * arpeggio.duration);
+			melody.addAll(chord);
 		}
 		return melody;
 	}

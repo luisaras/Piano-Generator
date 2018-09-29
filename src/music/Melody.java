@@ -74,7 +74,8 @@ public class Melody extends ArrayList<NotePlay> {
 				}
 				double time = note.time - start;
 				double duration = Math.min(note.duration, end - note.time);
-				subMelody.add(new NotePlay(note.note.clone(), time, duration));
+				Note pitch = note.note == null ? null : note.note.clone();
+				subMelody.add(new NotePlay(pitch, time, duration));
 			}
 		}
 		return subMelody;

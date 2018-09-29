@@ -71,7 +71,7 @@ public class Writer {
 		ArrayList<Phrase> phrases = new ArrayList<>();
 		ArrayList<Melody> lines = harmony.asMelodyLines(composition.scale);
 		for (Melody melody : lines) {
-			Phrase phrase = toPhrase(melody, composition.scale, 75);
+			Phrase phrase = toPhrase(melody, composition.scale, 60);
 			phrase.setAppend(false);
 			phrases.add(phrase);
 		}

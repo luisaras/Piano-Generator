@@ -15,21 +15,10 @@ public class Features {
 	// Weights
 	// ==================================================================================
 	
-	private static final double[] rhythmWeights = new double[] { 
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-	
-	private static final double[] pitchWeights = new double[] { 
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-	
-	private static final double[] intervalWeights = new double[] {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-	};
-	
-	private static final double[] noteWeights = new double[] { 
-		1, 1, 1, 1, 1, 1, 1
-	};
+	private static void setWeights(double[] features, double weight) {
+		for (int i = 0; i < features.length; i++)
+			features[i] *= weight;
+	}
 	
 	// ==================================================================================
 	// Features
@@ -37,23 +26,35 @@ public class Features {
 	
 	public static double[][] calculate(Composition piece) {
 		
-		Melody mergedTracks = piece.mergeTracks();
 		Melody chords = piece.harmony.asMelody();
 		Melody arpeggio = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
 		
-		double[] melodyr = rhythmFeatures(piece, piece.melody);
-		double[] arpeggior = rhythmFeatures(piece, arpeggio);
-		double[] pitch = pitchFeatures(piece, mergedTracks);
+		// Rhythm
+		double[] melodyr = rhythmFeatures(piece, piece.melody);		
+		setWeights(melodyr, 2);
+		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
+		setWeights(harmonyr, 0);
 		
+		// Pitch
+		double[] melodyp = pitchFeatures(piece, piece.melody);
+		double[] harmonyp = pitchFeatures(piece, piece.harmony.asMelody(piece.scale));
+		
+		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
+		setWeights(melodyi, 2);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
-		double[] arpeggioi = arpeggioFeatures(piece);
+		setWeights(chordsi, 4);
+		double[] arpeggioi = harmonyIntervals(piece);
+		setWeights(arpeggioi, 4);
 		
+		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
 		double[] chordsn = noteFeatures(piece.scale, chords);
+		setWeights(chordsn, 4);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
 
-		return new double[][] { melodyr, pitch,
+		return new double[][] { melodyr, harmonyr,
+				melodyp, harmonyp,
 				melodyi, chordsi, arpeggioi,
 				melodyn, chordsn, arpeggion };
 	}
@@ -63,15 +64,9 @@ public class Features {
 	// ==================================================================================
 	
 	private static double[] rhythmFeatures(Composition piece, Melody notes) {
-		double[] features = new double[rhythmWeights.length];
+		double[] features = new double[10];
 		
 		double seconds = notes.duration / piece.bpm * 60;
-		
-		Melody[] measures = new Melody[piece.length];
-		for (int m = 0; m < piece.length; m++) {
-			int start = m * piece.numerator, end = (m + 1) * piece.numerator;
-			measures[m] = notes.cut(start, end);
-		}
 		
 		// Note density
 		features[0] = notes.size() / seconds * 10;
@@ -100,19 +95,24 @@ public class Features {
 		}
 		features[5] /= notes.size();
 		
-		// Attack mean
 		double[] attacks = notes.getAttacks();
-		for (double attack : attacks) {
-			features[6] += attack;
+		if (attacks.length > 0) {
+			// Attack mean
+			for (double attack : attacks) {
+				features[6] += attack;
+			}
+			features[6] /= attacks.length;
+			
+			// Attack variation
+			for (double attack : attacks) {
+				double d = features[6] - attack;
+				features[7] += d * d;
+			}
+			features[7] /= attacks.length;
+		} else {
+			features[6] = notes.duration;
+			features[7] = 0;
 		}
-		features[6] /= attacks.length;
-		
-		// Attack variation
-		for (double attack : attacks) {
-			double d = features[6] - attack;
-			features[7] += d * d;
-		}
-		features[7] /= attacks.length;
 		
 		// Complete rest
 		NotePlay[] rests = notes.getRests();
@@ -130,7 +130,7 @@ public class Features {
 	// ==================================================================================
 	
 	private static double[] pitchFeatures(Composition piece, Melody notes) {
-		double[] features = new double[pitchWeights.length];
+		double[] features = new double[14];
 		
 		int[] pitchCount = notes.getPitches(piece.scale);
 		int[] classCount = notes.getPitchClasses(piece.scale);
@@ -225,7 +225,7 @@ public class Features {
 	// ==================================================================================
 	
 	private static double[] intervalFeatures(Scale scale, Note[] intervals) {
-		double[] features = new double[intervalWeights.length];
+		double[] features = new double[15];
 		
 		HashMap<Integer, Integer> count = new HashMap<>();
 		int longestIntervalSize = 0;
@@ -258,7 +258,7 @@ public class Features {
 			else if (interval == 6) {
 				tritones++;
 				dissonants++;
-			} else if (interval == 12)
+			} else if (interval == 0)
 				octaves++;
 			else if (intervals[i].accidental == 0 && intervals[i + 1].accidental == 0 &&
 					intervals[i].octaves == intervals[i + 1].octaves &&
@@ -319,13 +319,13 @@ public class Features {
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length;
+		features[12] = dissonants * 2.0 / intervals.length * 15;
 		
 		// Rising motion
-		features[13] = rising * 2.0 / intervals.length;
+		features[13] = rising * 2.0 / intervals.length * 10;
 		
 		// Falling motion
-		features[14] = falling * 2.0 / intervals.length;
+		features[14] = falling * 2.0 / intervals.length * 10;
 		
 		return features;
 	}
@@ -335,7 +335,7 @@ public class Features {
 	// ==================================================================================
 	
 	private static double[] noteFeatures(Scale scale, Melody melody) {
-		double[] features = new double[noteWeights.length];
+		double[] features = new double[7];
 		
 		HashMap<Integer, Boolean> repeat = new HashMap<>();
 		HashMap<Integer, Integer> occurrence = new HashMap<>();
@@ -407,11 +407,11 @@ public class Features {
 	}
 	
 	// ==================================================================================
-	// Arpeggio
+	// Harmony
 	// ==================================================================================
 
-	private static double[] arpeggioFeatures(Composition piece) {
-		double[] features = new double[intervalWeights.length];
+	private static double[] harmonyIntervals(Composition piece) {
+		double[] features = new double[15];
 		
 		for (int m = 0; m < piece.length; m++) {
 			Note[] measureIntervals = piece.getMeasureIntervals(m);
