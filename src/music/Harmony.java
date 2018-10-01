@@ -19,7 +19,7 @@ public class Harmony extends ArrayList<Chord> {
 	}
 	
 	public Harmony clone() {
-		Arpeggio arpeggio = this.arpeggio.clone();
+		//Arpeggio arpeggio = this.arpeggio.clone();
 		Harmony harmony = new Harmony(arpeggio);
 		for (Chord chord : this) {
 			harmony.add(chord.clone());

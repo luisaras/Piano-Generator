@@ -146,6 +146,8 @@ public class Scale {
 	 * @return MIDI pitch.
 	 */
 	public int getPitch(int pos) {
+		if (pos < 0)
+			return 0;
 		return root + steps[pos % 7] + 12 * (pos / 7);
 	}
 	
@@ -175,7 +177,10 @@ public class Scale {
 			if (ipitch == pitch) {
 				return new Note(i, 0, octaves);
 			} else if (ipitch > pitch) {
-				return new Note(i - 1, 1, octaves);
+				if (i == 0)
+					return new Note(i, -1, octaves);
+				else
+					return new Note(i - 1, 1, octaves);
 			}
 		}
 		return new Note(0, pitch, octaves);

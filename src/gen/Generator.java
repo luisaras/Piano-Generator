@@ -13,16 +13,33 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int generationCount = 100;
-	public int populationSize = 30;
+	public int populationSize = 50;
 	public int tournamentSize = 15;
 	
 	public final Individual template;
 	private Individual[] population = new Individual[populationSize];
+	private Individual[] melodies = new Individual[populationSize];
+	private Individual[] harmonies = new Individual[populationSize];
+	
+	// ==================================================================================
+	// Comparators
+	// ==================================================================================
 	
 	private Comparator<Individual> comparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
 			return (int) Math.signum(o1.distance - o2.distance);
+		}
+	};
+	
+	private Comparator<Individual> melodyComparator = new Comparator<Individual>() {
+		public int compare(Individual o1, Individual o2) {
+			return (int) Math.signum(o1.melodyDistance - o2.melodyDistance);
+		}
+	};
+	
+	private Comparator<Individual> harmonyComparator = new Comparator<Individual>() {
+		public int compare(Individual o1, Individual o2) {
+			return (int) Math.signum(o1.harmonyDistance - o2.harmonyDistance);
 		}
 	};
 	
@@ -49,8 +66,11 @@ public class Generator extends RandomGenerator {
 				it++;
 			} while (Double.isNaN(population[i].distance));
 			population[i].piece.melody.sort();
+			harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
+		Arrays.sort(melodies, melodyComparator);
+		Arrays.sort(harmonies, harmonyComparator);
 	}
 	
 	public void initializePopulation() {
@@ -61,8 +81,11 @@ public class Generator extends RandomGenerator {
 				piece.melody.sort();
 				population[i] = new Individual(piece, template);
 			} while (Double.isNaN(population[i].distance));
+			harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
+		Arrays.sort(melodies, melodyComparator);
+		Arrays.sort(harmonies, harmonyComparator);
 	}
 	
 	// ==================================================================================
@@ -75,10 +98,6 @@ public class Generator extends RandomGenerator {
 	
 	public Individual getWorst() {
 		return population[populationSize - 1];
-	}
-	
-	public Composition generate() {
-		return generate(generationCount);
 	}
 	
 	public Composition generate(int generationCount) {
@@ -96,17 +115,41 @@ public class Generator extends RandomGenerator {
 				child.melody.sort();
 				population[i] = new Individual(child, template);
 			} while (Double.isNaN(population[i].distance)); 
+			harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
+		Arrays.sort(melodies, melodyComparator);
+		Arrays.sort(harmonies, harmonyComparator);
 	}
 	
+	// ==================================================================================
+	// Crossover
+	// ==================================================================================
+		
+	public float newSignatureMutation = 0.05f;
+	public float newMelodyMutation = 0.05f;
+	public float newHarmonyMutation = 0.05f;
+	
 	public Composition crossover() {
-		Individual signature = population[rand.nextInt(tournamentSize)];
-		Individual melody = population[rand.nextInt(tournamentSize)];
-		Individual harmony = population[rand.nextInt(tournamentSize)];
-		Composition child = signature.piece.cloneSignature();
-		child.melody = melody.piece.melody.clone();
-		child.harmony = harmony.piece.harmony.clone();
+		Composition child;
+		if (rand.nextDouble() < newSignatureMutation)
+			child = randomSignature(template.piece);
+		else {
+			Individual signature = population[rand.nextInt(tournamentSize)];
+			child = signature.piece.cloneSignature();
+		}
+		if (rand.nextDouble() < newMelodyMutation)
+			child.melody = randomMelody(template.piece.melody, template.piece.scale);
+		else {
+			Individual melody = population[rand.nextInt(tournamentSize)];
+			child.melody = melody.piece.melody.clone();
+		}
+		if (rand.nextDouble() < newHarmonyMutation)
+			child.harmony = randomHarmony(template.piece.harmony, template.piece.scale);
+		else {
+			Individual harmony = population[rand.nextInt(tournamentSize)];
+			child.harmony = harmony.piece.harmony.clone();
+		}
 		return child;
 	}
 	
@@ -114,9 +157,9 @@ public class Generator extends RandomGenerator {
 	// Mutation
 	// ==================================================================================
 	
-	public float signatureMutation = 0.5f;
-	public float melodyMutation = 0.5f;
-	public float harmonyMutation = 0.5f;
+	public float signatureMutation = 1f;
+	public float melodyMutation = 1f;
+	public float harmonyMutation = 1f;
 	
 	protected void mutate(Composition piece) {
 		if (rand.nextDouble() < signatureMutation) {
@@ -160,6 +203,8 @@ public class Generator extends RandomGenerator {
 		if (rand.nextDouble() < accidentalMutation) {
 			int pitch = note.getMIDIPitch(scale) + 
 					(rand.nextBoolean() ? 1 : -1);
+			if (pitch < 0)
+				pitch *= -1;
 			Note note2 = scale.getPosition(pitch);
 			note.function = note2.function;
 			note.accidental = note2.accidental;
@@ -192,9 +237,9 @@ public class Generator extends RandomGenerator {
 	// Mutation - Melody
 	// ==================================================================================
 	
-	public float lineMutation = 0f;
-	public float durationMutation = 0.05f;
-	public float attackMutation = 0.05f;
+	public float lineMutation = 0.05f;
+	public float durationMutation = 0.15f;
+	public float attackMutation = 0.15f;
 	
 	public float melodyFunctionMutation = 0.25f;
 	public float melodyAccidentalMutation = 0.05f;
@@ -210,12 +255,14 @@ public class Generator extends RandomGenerator {
 		}
 		// Split notes
 		for (int i = 0; i < melody.size(); i++) {
-			if (rand.nextDouble() < lineMutation) {
-				NotePlay orig = melody.get(i);
-				orig.duration /= 2;
+			NotePlay orig = melody.get(i);
+			if (orig.duration > 1 / NotePlay.minSize && rand.nextDouble() < lineMutation) {
+				double point = rand.nextInt((int)(orig.duration * NotePlay.minSize - 1)) + 1;
+				point /= NotePlay.minSize;
 				NotePlay np = new NotePlay(orig.note.clone(), 
-						orig.time + orig.duration, orig.duration);
+						orig.time + point, orig.duration - point);
 				melody.add(i + 1, np);
+				orig.duration = point;
 				i++;
 			}
 		}
@@ -255,7 +302,7 @@ public class Generator extends RandomGenerator {
 	
 	public float harmonyFunctionMutation = 0.5f;
 	public float harmonyAccidentalMutation = 0.05f;
-	public float harmonyOctaveMutation = 0.2f;
+	public float harmonyOctaveMutation = 0.25f;
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
 		// Tonic

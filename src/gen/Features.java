@@ -31,29 +31,31 @@ public class Features {
 		
 		// Rhythm
 		double[] melodyr = rhythmFeatures(piece, piece.melody);		
-		setWeights(melodyr, 2);
+		setWeights(melodyr, 1);
 		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
-		setWeights(harmonyr, 0);
+		setWeights(harmonyr, 0.5);
 		
 		// Pitch
 		double[] melodyp = pitchFeatures(piece, piece.melody);
+		setWeights(melodyp, 0.5);
 		double[] harmonyp = pitchFeatures(piece, piece.harmony.asMelody(piece.scale));
+		setWeights(harmonyp, 0.5);
 		
 		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		setWeights(melodyi, 12);
+		setWeights(melodyi, 5);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
-		setWeights(chordsi, 4);
+		setWeights(chordsi, 2);
 		double[] arpeggioi = harmonyIntervals(piece);
-		setWeights(arpeggioi, 6);
+		setWeights(arpeggioi, 3);
 		
 		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
-		setWeights(melodyn, 4);
+		setWeights(melodyn, 2);
 		double[] chordsn = noteFeatures(piece.scale, chords);
-		setWeights(chordsn, 4);
+		setWeights(chordsn, 3);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
-		setWeights(arpeggion, 0);
+		setWeights(arpeggion, 0.5);
 
 		return new double[][] { melodyr, harmonyr,
 				melodyp, harmonyp,
@@ -71,7 +73,7 @@ public class Features {
 		double seconds = notes.duration / piece.bpm * 60;
 		
 		// Note density
-		features[0] = notes.size() / seconds * 10;
+		features[0] = notes.size() / seconds * 50;
 		
 		// Note duration mean, maximum and minimum
 		features[2] = 100;
@@ -87,7 +89,7 @@ public class Features {
 			double d = features[1] - np.duration;
 			features[4] += d * d;
 		}
-		features[4] /= notes.size();
+		features[4] *= 10.0 / notes.size();
 		
 		// Staccato incidence
 		double staccatoLength = 0.1 * piece.bpm / 60;
@@ -110,7 +112,7 @@ public class Features {
 				double d = features[6] - attack;
 				features[7] += d * d;
 			}
-			features[7] *= 4.0 / attacks.length;
+			features[7] *= 20.0 / attacks.length;
 		} else {
 			features[6] = notes.duration;
 			features[7] = 0;
@@ -166,7 +168,7 @@ public class Features {
 		features[3] = 1.0 * classCount[secondClass] / classCount[firstClass];
 		
 		// Difference between top pitches
-		features[4] = Math.abs(pitchCount[firstPitch] - pitchCount[secondPitch]);
+		features[4] = Math.abs(pitchCount[firstPitch] - pitchCount[secondPitch]) * 10;
 		
 		// Difference between top pitch classes
 		features[5] = Math.abs(classCount[firstClass] - classCount[secondClass]);
@@ -208,13 +210,13 @@ public class Features {
 		}
 		
 		// Average pitch
-		features[10] /= notes.size();
+		features[10] *= 10.0 / notes.size();
 		
 		// Average pitch class
 		features[11] /= notes.size();
 		
 		// Average pitch octave
-		features[12] /= notes.size();
+		features[12] *= 10.0 / notes.size();
 		
 		// Average pitch position relative to scale
 		features[13] /= notes.size();
@@ -271,7 +273,7 @@ public class Features {
 		}
 		
 		// Longest melodic interval
-		features[0] = longestIntervalSize;
+		features[0] = longestIntervalSize * 10;
 		
 		// Most common melodic interval
 		int firstInterval = 0;
@@ -284,6 +286,7 @@ public class Features {
 			} else if (entry.getValue() > secondInterval)
 				secondInterval = entry.getValue();
 		}
+		features[1] *= 10;
 		
 		// Distance between most common melodic intervals
 		features[2] = Math.abs(firstInterval - secondInterval);
@@ -312,7 +315,7 @@ public class Features {
 		features[8] = thirds * 2.0 / intervals.length;
 		
 		// Melodic fifths
-		features[9] = fifths * 2.0 / intervals.length * 10;
+		features[9] = fifths * 2.0 / intervals.length * 100;
 		
 		// Melodic tritones
 		features[10] = tritones * 2.0 / intervals.length * 100;
@@ -321,13 +324,13 @@ public class Features {
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length * 25;
+		features[12] = dissonants * 2.0 / intervals.length * 50;
 		
 		// Rising motion
 		features[13] = rising * 2.0 / intervals.length * 10;
 		
 		// Falling motion
-		features[14] = falling * 2.0 / intervals.length * 10;
+		features[14] = falling * 2.0 / intervals.length * 20;
 		
 		return features;
 	}
@@ -361,6 +364,10 @@ public class Features {
 				occurrence.put(pitch, length);
 			}
 		}
+		features[0] *= 10;
+		features[1] *= 10;
+		features[4] *= 10;
+		features[5] *= 10;
 
 		// Repeated notes
 		features[7] /= melody.size();

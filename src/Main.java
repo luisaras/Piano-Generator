@@ -8,6 +8,8 @@ public class Main {
 	public static void main(String[] args) {
 		//testBaseGeneration();
 		testRandomGeneration();
+		//testFeatures("Sad1", "Sad2", "Happy1");
+		//testFeatures("Happy1", "Happy2", "Sad2");
 		System.out.println("Success!");
     }
 	
@@ -20,10 +22,16 @@ public class Main {
 		midi.Writer.write("results/" + templateFile, templatePiece);
 	}
 	
-	public static void testFeatures(String templateFile) {
-		Composition templatePiece = midi.Reader.read(templateFile);
-		Individual individual = new Individual(templatePiece);
-		individual.printFeatures();
+	public static void testFeatures(String file1, String file2, String file3) {
+		Individual template1 = new Individual(midi.Reader.read(file1));
+		Individual template2 = new Individual(midi.Reader.read(file2), template1);
+		Individual template3 = new Individual(midi.Reader.read(file3), template1);
+		Log.save("results/" + file1, template1, template2, template3);
+	}
+	
+	public static void testFeatures(String file) {
+		Individual template = new Individual(midi.Reader.read(file));
+		template.printFeatures();
 	}
 	
 	// ==================================================================================
@@ -78,10 +86,10 @@ public class Main {
 		saveResults(gen, file, 100);
 		gen.generate(900);
 		saveResults(gen, file, 1000);
-		gen.generate(3000);
-		saveResults(gen, file, 4000);
-		//gen.generate(5000);
-		//saveResults(gen, file, 10000);
+		gen.generate(4000);
+		saveResults(gen, file, 5000);
+		//gen.generate(10000);
+		//saveResults(gen, file, 15000);
 	}
 	
 	private static void saveResults(Generator gen, String file, int i) {
