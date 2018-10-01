@@ -79,6 +79,12 @@ public class Composition {
 				intervals.add(arp.get(j).note);
 			}
 		}
+		for (int i = 0; i < mel.size(); i++) {
+			for (int j = i + 1; j < mel.size(); j++) {
+				intervals.add(mel.get(i).note);
+				intervals.add(mel.get(j).note);
+			}
+		}
 		return intervals.toArray(new Note[intervals.size()]);
 	}
 	

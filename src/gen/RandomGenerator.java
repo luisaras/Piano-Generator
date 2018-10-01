@@ -53,17 +53,23 @@ public class RandomGenerator {
 		int maxPitch = 0;
 		double minDuration = 100;
 		double maxDuration = 0;
+		double accidentals = 0;
 		for (NotePlay np : template) {
 			int pitch = np.note.getMIDIPitch(scale);
 			minPitch = Math.min(pitch, minPitch);
 			maxPitch = Math.max(pitch, maxPitch);
 			minDuration = Math.min(np.duration, minDuration);
 			maxDuration = Math.max(np.duration, maxDuration);
+			if (np.note.accidental != 0)
+				accidentals++;
 		}
+		accidentals /= template.size();
 		double[] attacks = randomAttacks(noteCount, template.duration);
 		for (int i = 0; i < noteCount; i++) {
 			int pitch = rand.nextInt(maxPitch - minPitch + 1) + minPitch;
 			Note note = scale.getPosition(pitch);
+			if (rand.nextDouble() > accidentals)
+				note.accidental = 0;
 			double end = i < noteCount - 1 ? attacks[i + 1] : template.duration;
 			double t = rand.nextDouble() * (maxDuration - minDuration) + minDuration;
 			t = Math.min(t, end - attacks[i]);

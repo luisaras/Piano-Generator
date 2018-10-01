@@ -31,7 +31,7 @@ public class Features {
 		
 		// Rhythm
 		double[] melodyr = rhythmFeatures(piece, piece.melody);		
-		setWeights(melodyr, 4);
+		setWeights(melodyr, 2);
 		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
 		setWeights(harmonyr, 0);
 		
@@ -41,18 +41,19 @@ public class Features {
 		
 		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		setWeights(melodyi, 16);
+		setWeights(melodyi, 12);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
-		setWeights(chordsi, 8);
+		setWeights(chordsi, 4);
 		double[] arpeggioi = harmonyIntervals(piece);
-		setWeights(arpeggioi, 4);
+		setWeights(arpeggioi, 6);
 		
 		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
 		setWeights(melodyn, 4);
 		double[] chordsn = noteFeatures(piece.scale, chords);
-		setWeights(chordsn, 8);
+		setWeights(chordsn, 4);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
+		setWeights(arpeggion, 0);
 
 		return new double[][] { melodyr, harmonyr,
 				melodyp, harmonyp,
@@ -302,7 +303,7 @@ public class Features {
 		}
 		
 		// Chromatic motion
-		features[6] = chromatic * 2.0 / intervals.length * 50;
+		features[6] = chromatic * 2.0 / intervals.length * 200;
 		
 		// Stepwise motion
 		features[7] = stepwise * 2.0 / intervals.length;
@@ -311,16 +312,16 @@ public class Features {
 		features[8] = thirds * 2.0 / intervals.length;
 		
 		// Melodic fifths
-		features[9] = fifths * 2.0 / intervals.length;
+		features[9] = fifths * 2.0 / intervals.length * 10;
 		
 		// Melodic tritones
-		features[10] = tritones * 2.0 / intervals.length * 50;
+		features[10] = tritones * 2.0 / intervals.length * 100;
 		
 		// Melodic octaves
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length * 50;
+		features[12] = dissonants * 2.0 / intervals.length * 25;
 		
 		// Rising motion
 		features[13] = rising * 2.0 / intervals.length * 10;
@@ -336,22 +337,23 @@ public class Features {
 	// ==================================================================================
 	
 	private static double[] noteFeatures(Scale scale, Melody melody) {
-		double[] features = new double[7];
+		double[] features = new double[13];
 		
 		HashMap<Integer, Boolean> repeat = new HashMap<>();
 		HashMap<Integer, Integer> occurrence = new HashMap<>();
 		int repetitions = 1;
 		int length = 0;
 		for (NotePlay np : melody) {
+			features[np.note.function]++;
 			int pitch = np.note.getMIDIPitch(scale);
 			int lastOccurence = occurrence.getOrDefault(pitch, 0);
 			if (lastOccurence > 0 && length - lastOccurence <= 16) {
-				features[1] += length;
+				features[8] += length;
 				occurrence.clear();
 				repetitions++;
 				length = 0;
 				if (!repeat.getOrDefault(pitch, false)) {
-					features[0]++;
+					features[7]++;
 					repeat.put(pitch, true);
 				}
 			} else {
@@ -361,10 +363,10 @@ public class Features {
 		}
 
 		// Repeated notes
-		features[0] /= melody.size();
+		features[7] /= melody.size();
 		
 		// Melodic pitch variety
-		features[1] = (features[1] + length) / repetitions;
+		features[8] = (features[8] + length) / repetitions;
 		
 		int[] functionCount = melody.getFunctions();
 		int firstFunction = 0, secondFunction = 0;
@@ -376,33 +378,30 @@ public class Features {
 				secondFunction = i;
 		}
 		
-		// Function occurences
-		features[2] = firstFunction;
-		
 		// Most common function prevalence
 		if (melody.size() == 0)
-			features[3] = 0;
+			features[9] = 0;
 		else 
-			features[3] = functionCount[firstFunction] / melody.size();
+			features[9] = functionCount[firstFunction] / melody.size();
 		
 		// Relative strength between top functions
 		if (melody.size() == 0)
-			features[4] = 0;
+			features[10] = 0;
 		else 
-			features[4] = functionCount[secondFunction] / functionCount[firstFunction];
+			features[10] = functionCount[secondFunction] / functionCount[firstFunction];
 		
 		// Average octave
 		for (NotePlay np : melody) {
-			features[5] += np.note.octaves;
+			features[11] += np.note.octaves;
 		}
-		features[5] /= melody.size();
+		features[11] /= melody.size();
 		
 		// Accidental incidence
 		for (NotePlay np : melody) {
 			if (np.note.accidental != 0)
-				features[6]++;
+				features[12]++;
 		}
-		features[6] *= 50.0 / melody.size();
+		features[12] *= 1000.0 / melody.size();
 		
 		return features;
 	}

@@ -78,10 +78,10 @@ public class Main {
 		saveResults(gen, file, 100);
 		gen.generate(900);
 		saveResults(gen, file, 1000);
-		gen.generate(4000);
-		saveResults(gen, file, 5000);
-		gen.generate(5000);
-		saveResults(gen, file, 10000);
+		gen.generate(3000);
+		saveResults(gen, file, 4000);
+		//gen.generate(5000);
+		//saveResults(gen, file, 10000);
 	}
 	
 	private static void saveResults(Generator gen, String file, int i) {

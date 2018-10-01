@@ -196,7 +196,7 @@ public class Generator extends RandomGenerator {
 	public float durationMutation = 0.05f;
 	public float attackMutation = 0.05f;
 	
-	public float melodyFunctionMutation = 0.15f;
+	public float melodyFunctionMutation = 0.25f;
 	public float melodyAccidentalMutation = 0.05f;
 	public float melodyOctaveMutation = 0.25f;
 	
@@ -254,7 +254,7 @@ public class Generator extends RandomGenerator {
 	// ==================================================================================
 	
 	public float harmonyFunctionMutation = 0.5f;
-	public float harmonyAccidentalMutation = 0.1f;
+	public float harmonyAccidentalMutation = 0.05f;
 	public float harmonyOctaveMutation = 0.2f;
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
