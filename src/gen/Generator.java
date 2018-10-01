@@ -14,8 +14,8 @@ import music.Scale;
 public class Generator extends RandomGenerator {
 	
 	public int generationCount = 100;
-	public int populationSize = 20;
-	public int tournamentSize = 10;
+	public int populationSize = 30;
+	public int tournamentSize = 15;
 	
 	public final Individual template;
 	private Individual[] population = new Individual[populationSize];
@@ -35,7 +35,6 @@ public class Generator extends RandomGenerator {
 	}
 	
 	public void initializePopulation(Composition initialPiece) {
-		System.out.println("Initializing: " + initialPiece.name);
 		for (int i = 0; i < population.length; i++) {
 			int it = 0;
 			do {
@@ -52,7 +51,6 @@ public class Generator extends RandomGenerator {
 			population[i].piece.melody.sort();
 		}
 		Arrays.sort(population, comparator);
-		System.out.println("Initialized " + initialPiece.name);
 	}
 	
 	public void initializePopulation() {
@@ -195,12 +193,12 @@ public class Generator extends RandomGenerator {
 	// ==================================================================================
 	
 	public float lineMutation = 0f;
-	public float durationMutation = 0f;
-	public float attackMutation = 0f;
+	public float durationMutation = 0.05f;
+	public float attackMutation = 0.05f;
 	
-	public float melodyFunctionMutation = 0f;
-	public float melodyAccidentalMutation = 0f;
-	public float melodyOctaveMutation = 0.5f;
+	public float melodyFunctionMutation = 0.15f;
+	public float melodyAccidentalMutation = 0.05f;
+	public float melodyOctaveMutation = 0.25f;
 	
 	public void mutateMelody(Melody melody, Scale scale) {
 		// Remove notes
@@ -256,8 +254,8 @@ public class Generator extends RandomGenerator {
 	// ==================================================================================
 	
 	public float harmonyFunctionMutation = 0.5f;
-	public float harmonyAccidentalMutation = 0.2f;
-	public float harmonyOctaveMutation = 0.05f;
+	public float harmonyAccidentalMutation = 0.1f;
+	public float harmonyOctaveMutation = 0.2f;
 	
 	public void mutateHarmony(Harmony harmony, Scale scale) {
 		// Tonic

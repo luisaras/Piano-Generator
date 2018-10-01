@@ -31,7 +31,7 @@ public class Features {
 		
 		// Rhythm
 		double[] melodyr = rhythmFeatures(piece, piece.melody);		
-		setWeights(melodyr, 2);
+		setWeights(melodyr, 4);
 		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
 		setWeights(harmonyr, 0);
 		
@@ -41,16 +41,17 @@ public class Features {
 		
 		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		setWeights(melodyi, 2);
+		setWeights(melodyi, 16);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
-		setWeights(chordsi, 4);
+		setWeights(chordsi, 8);
 		double[] arpeggioi = harmonyIntervals(piece);
 		setWeights(arpeggioi, 4);
 		
 		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
+		setWeights(melodyn, 4);
 		double[] chordsn = noteFeatures(piece.scale, chords);
-		setWeights(chordsn, 4);
+		setWeights(chordsn, 8);
 		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
 
 		return new double[][] { melodyr, harmonyr,
@@ -108,7 +109,7 @@ public class Features {
 				double d = features[6] - attack;
 				features[7] += d * d;
 			}
-			features[7] /= attacks.length;
+			features[7] *= 4.0 / attacks.length;
 		} else {
 			features[6] = notes.duration;
 			features[7] = 0;
@@ -301,7 +302,7 @@ public class Features {
 		}
 		
 		// Chromatic motion
-		features[6] = chromatic * 2.0 / intervals.length;
+		features[6] = chromatic * 2.0 / intervals.length * 50;
 		
 		// Stepwise motion
 		features[7] = stepwise * 2.0 / intervals.length;
@@ -313,13 +314,13 @@ public class Features {
 		features[9] = fifths * 2.0 / intervals.length;
 		
 		// Melodic tritones
-		features[10] = tritones * 2.0 / intervals.length;
+		features[10] = tritones * 2.0 / intervals.length * 50;
 		
 		// Melodic octaves
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length * 15;
+		features[12] = dissonants * 2.0 / intervals.length * 50;
 		
 		// Rising motion
 		features[13] = rising * 2.0 / intervals.length * 10;
@@ -375,7 +376,7 @@ public class Features {
 				secondFunction = i;
 		}
 		
-		// Most common function
+		// Function occurences
 		features[2] = firstFunction;
 		
 		// Most common function prevalence
@@ -401,7 +402,7 @@ public class Features {
 			if (np.note.accidental != 0)
 				features[6]++;
 		}
-		features[6] /= melody.size();
+		features[6] *= 50.0 / melody.size();
 		
 		return features;
 	}
@@ -417,7 +418,8 @@ public class Features {
 			Note[] measureIntervals = piece.getMeasureIntervals(m);
 			double[] measureFeatures = intervalFeatures(piece.scale, measureIntervals);
 			for (int i = 0; i < features.length; i++)
-				features[i] += measureFeatures[i] / piece.length;
+				features[i] += measureFeatures[i] / piece.length 
+					* 2 * piece.melody.size() / measureIntervals.length;
 		}
 		
 		return features;

@@ -24,6 +24,7 @@ public class Writer {
 		score.setKeyQuality(sig);
 		score.setTimeSignature(composition.numerator, composition.denominator);
 		
+		System.out.println(fileName);
 		System.out.println(composition.scale);
 		System.out.println(composition.harmony);
 		

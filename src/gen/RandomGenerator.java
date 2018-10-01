@@ -3,9 +3,7 @@ package gen;
 import java.util.Arrays;
 import java.util.Random;
 
-import music.Arpeggio;
 import music.Chord;
-import music.ChordPlay;
 import music.Composition;
 import music.Harmony;
 import music.Melody;
@@ -42,7 +40,7 @@ public class RandomGenerator {
 		double[] attacks = new double[size];
 		for (int i = 0; i < size; i++) {
 			double t = rand.nextDouble() * (duration - 1 / NotePlay.minSize);
-			attacks[i] = Math.floor(t * NotePlay.minSize + 1) / NotePlay.minSize;
+			attacks[i] = Math.floor(t * NotePlay.minSize) / NotePlay.minSize;
 		}
 		Arrays.sort(attacks);
 		return attacks;
@@ -58,17 +56,18 @@ public class RandomGenerator {
 		for (NotePlay np : template) {
 			int pitch = np.note.getMIDIPitch(scale);
 			minPitch = Math.min(pitch, minPitch);
-			maxPitch = Math.max(pitch + 1, maxPitch);
+			maxPitch = Math.max(pitch, maxPitch);
 			minDuration = Math.min(np.duration, minDuration);
-			maxDuration = Math.max(np.duration + 1, maxDuration);
+			maxDuration = Math.max(np.duration, maxDuration);
 		}
 		double[] attacks = randomAttacks(noteCount, template.duration);
 		for (int i = 0; i < noteCount; i++) {
-			int pitch = rand.nextInt(maxPitch - minPitch) + minPitch;
+			int pitch = rand.nextInt(maxPitch - minPitch + 1) + minPitch;
 			Note note = scale.getPosition(pitch);
 			double end = i < noteCount - 1 ? attacks[i + 1] : template.duration;
-			double duration = rand.nextDouble() * (maxDuration - minDuration) + minDuration;
-			duration = Math.min(duration, end - attacks[i]);
+			double t = rand.nextDouble() * (maxDuration - minDuration) + minDuration;
+			t = Math.min(t, end - attacks[i]);
+			double duration = Math.floor(t * NotePlay.minSize + 1) / NotePlay.minSize;
 			NotePlay np = new NotePlay(note, attacks[i], duration);
 			notes.add(np);
 		}
@@ -83,15 +82,15 @@ public class RandomGenerator {
 		int minOctave = 100, maxOctave = 0;
 		for (Chord chord : template) {
 			minOctave = Math.min(minOctave, chord.tonic.octaves);
-			maxOctave = Math.max(maxOctave + 1, chord.tonic.octaves);
+			maxOctave = Math.max(maxOctave, chord.tonic.octaves);
 		}
 		Harmony harmony = new Harmony();
 		for (int i = 0; i < template.size(); i++) {
-			int oct = rand.nextInt(maxOctave - minOctave) + minOctave;
+			int oct = rand.nextInt(maxOctave - minOctave + 1) + minOctave;
 			Note tonic = new Note(rand.nextInt(7), 0, oct);
 			harmony.add(new Chord(tonic));
 		}
-		Arpeggio arpeggio = new Arpeggio(template.arpeggio.duration);
+		/*Arpeggio arpeggio = new Arpeggio(template.arpeggio.duration);
 		int minPitch = 127, maxPitch = 0;
 		int minNoteCount = 100, maxNoteCount = 0;
 		double minDuration = 100, maxDuration = 0;
@@ -119,7 +118,8 @@ public class RandomGenerator {
 			}
 			arpeggio.add(cp);
 		}
-		harmony.arpeggio = arpeggio;
+		harmony.arpeggio = arpeggio;*/
+		harmony.arpeggio = template.arpeggio.clone();
 		return harmony;
 	}
 	
