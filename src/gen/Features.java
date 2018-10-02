@@ -31,7 +31,7 @@ public class Features {
 		
 		// Rhythm
 		double[] melodyr = rhythmFeatures(piece, piece.melody);		
-		setWeights(melodyr, 1);
+		setWeights(melodyr, 2);
 		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
 		setWeights(harmonyr, 0.5);
 		
@@ -43,11 +43,13 @@ public class Features {
 		
 		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		setWeights(melodyi, 5);
+		setWeights(melodyi, 4);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
 		setWeights(chordsi, 2);
-		double[] arpeggioi = harmonyIntervals(piece);
-		setWeights(arpeggioi, 3);
+		double[] arpeggioi = arpeggioIntervals(piece);
+		setWeights(arpeggioi, 5);
+		double[] harmonyi = harmonyIntervals(piece);
+		setWeights(harmonyi, 5);
 		
 		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
@@ -59,7 +61,7 @@ public class Features {
 
 		return new double[][] { melodyr, harmonyr,
 				melodyp, harmonyp,
-				melodyi, chordsi, arpeggioi,
+				melodyi, chordsi, arpeggioi, harmonyi,
 				melodyn, chordsn, arpeggion };
 	}
 	
@@ -70,10 +72,10 @@ public class Features {
 	private static double[] rhythmFeatures(Composition piece, Melody notes) {
 		double[] features = new double[10];
 		
-		double seconds = notes.duration / piece.bpm * 60;
+		double minutes = notes.duration / piece.bpm;
 		
 		// Note density
-		features[0] = notes.size() / seconds * 50;
+		features[0] = notes.size() / minutes;
 		
 		// Note duration mean, maximum and minimum
 		features[2] = 100;
@@ -97,7 +99,7 @@ public class Features {
 			if (np.duration < staccatoLength)
 				features[5]++;
 		}
-		features[5] /= notes.size();
+		features[5] *= 10.0 / notes.size();
 		
 		double[] attacks = notes.getAttacks();
 		if (attacks.length > 0) {
@@ -106,7 +108,6 @@ public class Features {
 				features[6] += attack;
 			}
 			features[6] /= attacks.length;
-			
 			// Attack variation
 			for (double attack : attacks) {
 				double d = features[6] - attack;
@@ -306,7 +307,7 @@ public class Features {
 		}
 		
 		// Chromatic motion
-		features[6] = chromatic * 2.0 / intervals.length * 200;
+		features[6] = chromatic * 2.0 / intervals.length * 300;
 		
 		// Stepwise motion
 		features[7] = stepwise * 2.0 / intervals.length;
@@ -318,13 +319,13 @@ public class Features {
 		features[9] = fifths * 2.0 / intervals.length * 100;
 		
 		// Melodic tritones
-		features[10] = tritones * 2.0 / intervals.length * 100;
+		features[10] = tritones * 2.0 / intervals.length * 300;
 		
 		// Melodic octaves
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length * 50;
+		features[12] = dissonants * 2.0 / intervals.length * 300;
 		
 		// Rising motion
 		features[13] = rising * 2.0 / intervals.length * 10;
@@ -426,6 +427,19 @@ public class Features {
 			for (int i = 0; i < features.length; i++)
 				features[i] += measureFeatures[i] / piece.length 
 					* 2 * piece.melody.size() / measureIntervals.length;
+		}
+		
+		return features;
+	}
+	
+	private static double[] arpeggioIntervals(Composition piece) {
+		double[] features = new double[15];
+		
+		for (int m = 0; m < piece.length; m++) {
+			Note[] measureIntervals = piece.getArpeggioIntervals(m);
+			double[] measureFeatures = intervalFeatures(piece.scale, measureIntervals);
+			for (int i = 0; i < features.length; i++)
+				features[i] += measureFeatures[i] / piece.length  / measureIntervals.length;
 		}
 		
 		return features;

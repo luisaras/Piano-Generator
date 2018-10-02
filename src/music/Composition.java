@@ -88,6 +88,18 @@ public class Composition {
 		return intervals.toArray(new Note[intervals.size()]);
 	}
 	
+	public Note[] getArpeggioIntervals(int t) {
+		ArrayList<Note> intervals = new ArrayList<>();
+		Melody arp = harmony.arpeggio.asMelody(scale, harmony.get(t));
+		for (int i = 0; i < arp.size(); i++) {
+			for (int j = i + 1; j < arp.size(); j++) {
+				intervals.add(arp.get(i).note);
+				intervals.add(arp.get(j).note);
+			}
+		}
+		return intervals.toArray(new Note[intervals.size()]);
+	}
+	
 	public double getMinutes() {
 		return length * denominator / bpm;
 	}

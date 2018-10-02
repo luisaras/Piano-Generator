@@ -13,13 +13,13 @@ import music.Scale;
 
 public class Generator extends RandomGenerator {
 	
-	public int populationSize = 50;
+	public int populationSize = 60;
 	public int tournamentSize = 15;
 	
 	public final Individual template;
 	private Individual[] population = new Individual[populationSize];
-	private Individual[] melodies = new Individual[populationSize];
-	private Individual[] harmonies = new Individual[populationSize];
+	//private Individual[] melodies = new Individual[populationSize];
+	//private Individual[] harmonies = new Individual[populationSize];
 	
 	// ==================================================================================
 	// Comparators
@@ -31,7 +31,7 @@ public class Generator extends RandomGenerator {
 		}
 	};
 	
-	private Comparator<Individual> melodyComparator = new Comparator<Individual>() {
+	/*private Comparator<Individual> melodyComparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
 			return (int) Math.signum(o1.melodyDistance - o2.melodyDistance);
 		}
@@ -41,7 +41,7 @@ public class Generator extends RandomGenerator {
 		public int compare(Individual o1, Individual o2) {
 			return (int) Math.signum(o1.harmonyDistance - o2.harmonyDistance);
 		}
-	};
+	};*/
 	
 	// ==================================================================================
 	// Initialization
@@ -66,11 +66,11 @@ public class Generator extends RandomGenerator {
 				it++;
 			} while (Double.isNaN(population[i].distance));
 			population[i].piece.melody.sort();
-			harmonies[i] = melodies[i] = population[i];
+			//harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
-		Arrays.sort(melodies, melodyComparator);
-		Arrays.sort(harmonies, harmonyComparator);
+		//Arrays.sort(melodies, melodyComparator);
+		//Arrays.sort(harmonies, harmonyComparator);
 	}
 	
 	public void initializePopulation() {
@@ -81,11 +81,11 @@ public class Generator extends RandomGenerator {
 				piece.melody.sort();
 				population[i] = new Individual(piece, template);
 			} while (Double.isNaN(population[i].distance));
-			harmonies[i] = melodies[i] = population[i];
+			//harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
-		Arrays.sort(melodies, melodyComparator);
-		Arrays.sort(harmonies, harmonyComparator);
+		//Arrays.sort(melodies, melodyComparator);
+		//Arrays.sort(harmonies, harmonyComparator);
 	}
 	
 	// ==================================================================================
@@ -115,11 +115,11 @@ public class Generator extends RandomGenerator {
 				child.melody.sort();
 				population[i] = new Individual(child, template);
 			} while (Double.isNaN(population[i].distance)); 
-			harmonies[i] = melodies[i] = population[i];
+			//harmonies[i] = melodies[i] = population[i];
 		}
 		Arrays.sort(population, comparator);
-		Arrays.sort(melodies, melodyComparator);
-		Arrays.sort(harmonies, harmonyComparator);
+		//Arrays.sort(melodies, melodyComparator);
+		//Arrays.sort(harmonies, harmonyComparator);
 	}
 	
 	// ==================================================================================
@@ -212,7 +212,8 @@ public class Generator extends RandomGenerator {
 		}
 		// Change functions
 		if (rand.nextDouble() < functionMutation) {
-			for (int i = 0; i < 3; i++)
+			note.function = rand.nextInt(7);
+			for (int i = 0; i < 5; i++)
 			if (rand.nextBoolean()) {
 				// Increase
 				if (note.function == 6) {

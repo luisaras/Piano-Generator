@@ -7,7 +7,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		//testBaseGeneration();
-		testRandomGeneration();
+		testRandomGeneration(2);
 		//testFeatures("Sad1", "Sad2", "Happy1");
 		//testFeatures("Happy1", "Happy2", "Sad2");
 		System.out.println("Success!");
@@ -38,12 +38,14 @@ public class Main {
 	// Generation Tests
 	// ==================================================================================
 	
-	public static void testRandomGeneration() {
-		for (int i = 1; i <= 2; i++) {
-			Generator gen1 = getGenerator(null, "Sad" + i);
-			saveResults(gen1, "Sad " + i + "/");
-			Generator gen2 = getGenerator(null, "Happy" + i);
-			saveResults(gen2, "Happy " + i + "/");
+	public static void testRandomGeneration(int samples) {
+		for (int s = 0; s < samples; s++) {
+			for (int i = 1; i <= 2; i++) {
+				Generator gen1 = getGenerator(null, "Sad" + i);
+				saveResults(gen1, "Sad " + i + "/" + s + " - ");
+				Generator gen2 = getGenerator(null, "Happy" + i);
+				saveResults(gen2, "Happy " + i + "/" + s + " - ");
+			}
 		}
 	}
 	
@@ -88,8 +90,8 @@ public class Main {
 		saveResults(gen, file, 1000);
 		gen.generate(4000);
 		saveResults(gen, file, 5000);
-		//gen.generate(10000);
-		//saveResults(gen, file, 15000);
+		gen.generate(10000);
+		saveResults(gen, file, 15000);
 	}
 	
 	private static void saveResults(Generator gen, String file, int i) {

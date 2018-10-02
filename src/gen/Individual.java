@@ -25,9 +25,10 @@ public class Individual {
 			getDifferences(template, 4) + getDifferences(template, 7);
 		// Harmony distance
 		harmonyDistance = getDifferences(template, 1) + getDifferences(template, 3) + 
-			getDifferences(template, 5) + getDifferences(template, 8) + getDifferences(template, 9);
+			getDifferences(template, 5) + getDifferences(template, 6) + 
+			getDifferences(template, 9) + getDifferences(template, 10);
 		// General distance
-		distance = melodyDistance + harmonyDistance + getDifferences(template, 6);
+		distance = melodyDistance + harmonyDistance + getDifferences(template, 7);
 	}
 	
 	private double getDifferences(Individual template, int i) {
