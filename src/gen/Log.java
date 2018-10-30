@@ -33,4 +33,27 @@ public class Log {
 		}
 	}
 	
+	public static void save(String name, Individual template, Individual ind1) {
+		File file = new File(name + ".txt");
+		file.getParentFile().mkdirs();
+		try {
+			FileWriter writer = new FileWriter(file);
+			String tab = "\t\t\t\t\t";
+			String line = "Distance: " + tab + df2.format(ind1.distance) + "\n";
+			writer.write(line);
+			for (int i = 0; i < ind1.features.length; i++) {
+				for(int j = 0; j < ind1.features[i].length; j++) {
+					double v0 = template.features[i][j];
+					double v1 = ind1.features[i][j];
+					line = i + " " + j + ": " + df2.format(v0) + tab + 
+							df2.format(v1) + "\n";
+					writer.write(line);
+				}
+			}
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

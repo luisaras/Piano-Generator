@@ -13,7 +13,7 @@ import music.Scale;
 
 public class RandomGenerator {
 
-	protected Random rand = new Random(1);
+	protected Random rand = new Random(0);
 	
 	public Composition generate(Composition template) {
 		Composition composition = randomSignature(template);

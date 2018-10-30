@@ -16,7 +16,8 @@ public class Modifier extends RandomGenerator {
 	public int tournamentSize = 15;
 	
 	public final Individual template;
-	protected Individual[] population = new Individual[populationSize];
+	public Individual base = null;
+	public Individual[] population = new Individual[populationSize];
 	
 	protected Comparator<Individual> comparator = new Comparator<Individual>() {
 		public int compare(Individual o1, Individual o2) {
@@ -48,6 +49,7 @@ public class Modifier extends RandomGenerator {
 			} while (Double.isNaN(population[i].distance));
 			population[i].piece.melody.sort();
 		}
+		base = new Individual(initialPiece, template);
 		Arrays.sort(population, comparator);
 	}
 	

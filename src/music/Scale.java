@@ -146,7 +146,7 @@ public class Scale {
 	 * @return MIDI pitch.
 	 */
 	public int getPitch(int pos) {
-		return root + steps[pos % 7] + 12 * (pos / 7);
+		return root + steps[(pos + 7) % 7] + 12 * (pos / 7);
 	}
 	
 	public int getPitchValue(int pos) {

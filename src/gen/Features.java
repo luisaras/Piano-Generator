@@ -11,6 +11,8 @@ import music.Scale;
 
 public class Features {
 	
+	public static boolean weighted = true;
+	
 	// ==================================================================================
 	// Weights
 	// ==================================================================================
@@ -25,15 +27,10 @@ public class Features {
 	// ==================================================================================
 	
 	public static double[][] calculate(Composition piece) {
-		
 		Melody chords = piece.harmony.asMelody();
-		Melody arpeggio = piece.harmony.arpeggio.asMelody(piece.scale, piece.harmony.get(0));
-		
+
 		// Rhythm
 		double[] melodyr = rhythmFeatures(piece, piece.melody);		
-		setWeights(melodyr, 2);
-		double[] harmonyr = rhythmFeatures(piece, piece.harmony.arpeggio.getPlays());
-		setWeights(harmonyr, 0);
 		
 		// Pitch
 		double[] melodyp = pitchFeatures(piece, piece.melody);
@@ -41,24 +38,26 @@ public class Features {
 		
 		// Intervals
 		double[] melodyi = intervalFeatures(piece.scale, piece.melody.getIntervals());
-		setWeights(melodyi, 12);
 		double[] chordsi = intervalFeatures(piece.scale, chords.getIntervals());
-		setWeights(chordsi, 4);
 		double[] arpeggioi = harmonyIntervals(piece);
-		setWeights(arpeggioi, 6);
 		
 		// Note
 		double[] melodyn = noteFeatures(piece.scale, piece.melody);
-		setWeights(melodyn, 4);
 		double[] chordsn = noteFeatures(piece.scale, chords);
-		setWeights(chordsn, 4);
-		double[] arpeggion = noteFeatures(piece.scale, arpeggio);
-		setWeights(arpeggion, 0);
 
-		return new double[][] { melodyr, harmonyr,
+		if (weighted) {
+			setWeights(melodyr, 2);
+			setWeights(melodyi, 12);
+			setWeights(chordsi, 4);
+			setWeights(arpeggioi, 6);
+			setWeights(melodyn, 4);
+			setWeights(chordsn, 4);
+		}
+		
+		return new double[][] { melodyr,
 				melodyp, harmonyp,
 				melodyi, chordsi, arpeggioi,
-				melodyn, chordsn, arpeggion };
+				melodyn, chordsn };
 	}
 	
 	// ==================================================================================
@@ -71,7 +70,8 @@ public class Features {
 		double seconds = notes.duration / piece.bpm * 60;
 		
 		// Note density
-		features[0] = notes.size() / seconds * 10;
+		features[0] = notes.size() / seconds;
+		if (weighted) features[0] *= 10;
 		
 		// Note duration mean, maximum and minimum
 		features[2] = 100;
@@ -110,7 +110,8 @@ public class Features {
 				double d = features[6] - attack;
 				features[7] += d * d;
 			}
-			features[7] *= 4.0 / attacks.length;
+			features[7] /= attacks.length;
+			if (weighted) features[7] *= 4;
 		} else {
 			features[6] = notes.duration;
 			features[7] = 0;
@@ -303,7 +304,8 @@ public class Features {
 		}
 		
 		// Chromatic motion
-		features[6] = chromatic * 2.0 / intervals.length * 200;
+		features[6] = chromatic * 2.0 / intervals.length;
+		if (weighted) features[6] *= 200;
 		
 		// Stepwise motion
 		features[7] = stepwise * 2.0 / intervals.length;
@@ -312,22 +314,27 @@ public class Features {
 		features[8] = thirds * 2.0 / intervals.length;
 		
 		// Melodic fifths
-		features[9] = fifths * 2.0 / intervals.length * 10;
+		features[9] = fifths * 2.0 / intervals.length;
+		if (weighted) features[9] *= 10;
 		
 		// Melodic tritones
-		features[10] = tritones * 2.0 / intervals.length * 100;
+		features[10] = tritones * 2.0 / intervals.length;
+		if (weighted) features[10] *= 100;
 		
 		// Melodic octaves
 		features[11] = octaves * 2.0 / intervals.length;
 		
 		// Dissonance ratio
-		features[12] = dissonants * 2.0 / intervals.length * 25;
+		features[12] = dissonants * 2.0 / intervals.length;
+		if (weighted) features[12] *= 25;
 		
 		// Rising motion
-		features[13] = rising * 2.0 / intervals.length * 10;
+		features[13] = rising * 2.0 / intervals.length;
+		if (weighted) features[13] *= 10;
 		
 		// Falling motion
-		features[14] = falling * 2.0 / intervals.length * 10;
+		features[14] = falling * 2.0 / intervals.length;
+		if (weighted) features[14] *= 10;
 		
 		return features;
 	}
@@ -401,7 +408,8 @@ public class Features {
 			if (np.note.accidental != 0)
 				features[12]++;
 		}
-		features[12] *= 1000.0 / melody.size();
+		features[12] /= melody.size();
+		if (weighted) features[12] *= 1000;
 		
 		return features;
 	}
