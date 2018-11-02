@@ -8,9 +8,11 @@ import gen.Modifier;
 public class Main {
 	
 	public static void main(String[] args) {
-		testMutation("Sad1");
+		//testMutation("Sad1");
 		//testRandomGeneration();
 		//testWeights("Happy1");
+		modify("Sad1", "Happy1");
+		//testRandomGeneration("Happy1");
 		System.out.println("Success!");
     }
 	
@@ -41,6 +43,12 @@ public class Main {
 	// ==================================================================================
 	// Generation Tests
 	// ==================================================================================
+	
+	public static void testRandomGeneration(String template) {
+		Modifier gen1 = getGenerator(template);
+		gen1.generate(100);
+		saveResults(gen1, template + "/", 100);
+	}
 	
 	public static void testRandomGeneration() {
 		for (int i = 1; i <= 2; i++) {
@@ -142,6 +150,15 @@ public class Main {
 		}
 	}
 	
+	public static void modify(String source, String target) {
+		//Modifier gen1 = getModifier(source, target);
+		//gen1.generate(100);
+		Generator gen1 = getGenerator(source, target);
+		gen1.generate(1000);
+		gen1.population[gen1.populationSize - 1] = gen1.base;
+		saveResults(gen1, source + " to " + target + " (notes)/", 1000);
+	}
+	
 	public static void testModMutation() {
 		Modifier best = getModifier("Sad1", "Happy1");
 		testModMutation("Final", best);
@@ -196,6 +213,17 @@ public class Main {
 		Generator gen = new Generator(templatePiece);
 		gen.initializePopulation();
 		return gen;
+	}
+	
+	private static Generator getGenerator(String source, String target) {
+		Composition templatePiece = midi.Reader.read(target);
+		Composition basePiece = midi.Reader.read(source);
+		if (basePiece == null) {
+			throw new RuntimeException("Could not read base: " + source);
+		}
+		Generator mod = new Generator(templatePiece);
+		mod.initializePopulation(basePiece);
+		return mod;
 	}
 	
 	private static Modifier getModifier(String source, String target) {
