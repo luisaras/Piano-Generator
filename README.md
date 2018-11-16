@@ -16,17 +16,19 @@ The best generated pieces are uploaded in the _chosensolution_ branch.
 The template pieces used are Happy1, Happy2, Sad1 and Sad2 from the folder "templates".
 Best samples generated from each template are the ones in the folders "results/Seed 0 (60)" and "results/Seed1 (60)".
 
-## Initial Oopulation
+## Overview
+
+### Initial Population
 
 A set of initial pieces are created with the same number of notes and measures as the template, the same scale and the same arpeggio pattern.
 Chord tonics and melody notes are chosen randomly.
 
-## Fitness Function
+### Fitness Function
 
 A set of 109 musical features from the template are extracted and compared with other piece's features. 
-The fittest individuals are the most similar to the template - computed with an eucledean distance between the feature vectors.
+The fittest individuals are the most similar to the template - computed with an euclidean distance between the feature vectors.
 
-## Genetic Operations
+### Genetic Operations
 
 There is only a single crossover operation: the selection of three parents - 
 one for the tempo and scale, one for the harmony chords and one for the melody.
@@ -38,4 +40,9 @@ The mutation operations are:
 - **Change note duration**: changes the note end time, using a random float from the end of the previous note to the start of the next note in the melody;
 - **Change note function**: changes the function of the note (melody or chord tonic), decreasing or increasing it by one step;
 - **Change note accidental**: changes the accidental of the note (melody or chord tonic), increasing or decreasing the pitch by half a tone;
-- **Change octave**: increases or decreases the all notes' (melody or chord tonics) pitches by one octave.
+- **Change octave**: increases or decreases all notes' (melody or chord tonics) pitches by one octave.
+
+## Installation
+
+* Open this project with Eclipse Luna IDE (https://www.eclipse.org/luna/);
+* Download jMusic (http://explodingart.com/jmusic/) and set its path on project settings.
